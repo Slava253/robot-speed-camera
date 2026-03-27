@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Робот-Фиксатор скорости вращения</title>
-    <meta name="description" content="Распознает только роботов с колесами или гусеницами, фиксирует превышение скорости вращения">
+    <meta name="description" content="Активируется только когда телефон неподвижен и видит робота с колесами/гусеницами">
     <style>
         * {
             margin: 0;
@@ -110,42 +110,54 @@
             pointer-events: none;
         }
 
-        .detection-panel {
+        .status-panel {
             background: #1e293b;
             border-radius: 24px;
             padding: 16px 20px;
             margin-bottom: 20px;
             display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .status-row {
+            display: flex;
             justify-content: space-between;
-            align-items: baseline;
+            align-items: center;
             flex-wrap: wrap;
             gap: 12px;
         }
 
-        .robot-status {
+        .status-item {
             display: flex;
             align-items: center;
             gap: 12px;
             background: #0f172a;
             padding: 8px 16px;
             border-radius: 40px;
+            flex: 1;
+            min-width: 140px;
         }
 
-        .robot-status-icon {
+        .status-icon {
             font-size: 1.5rem;
         }
 
-        .robot-status-text {
+        .status-text {
             font-weight: 600;
             font-size: 0.9rem;
         }
 
-        .detected {
+        .status-active {
             color: #10b981;
         }
 
-        .not-detected {
+        .status-inactive {
             color: #ef4444;
+        }
+
+        .status-warning {
+            color: #f59e0b;
         }
 
         .speed-value {
@@ -156,6 +168,7 @@
             padding: 6px 16px;
             border-radius: 60px;
             color: #facc15;
+            text-align: center;
         }
 
         .speed-label {
@@ -177,6 +190,16 @@
 
         .warning-badge {
             background: #f59e0b;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .info-badge {
+            background: #3b82f6;
             padding: 8px 16px;
             border-radius: 40px;
             font-weight: bold;
@@ -278,12 +301,23 @@
         @media (max-width: 500px) {
             .speed-value { font-size: 1.8rem; }
             .tab-button { font-size: 1rem; }
+            .status-item { min-width: 120px; }
         }
 
-        .features-list {
-            margin-top: 12px;
-            font-size: 0.7rem;
-            color: #60a5fa;
+        .gyro-indicator {
+            width: 100%;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .gyro-fill {
+            height: 100%;
+            background: #60a5fa;
+            transition: width 0.1s ease;
+            width: 0%;
         }
     </style>
 </head>
@@ -301,20 +335,41 @@
             <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
         </div>
 
-        <div class="detection-panel">
-            <div class="robot-status">
-                <span class="robot-status-icon" id="robotIcon">🤖</span>
-                <span class="robot-status-text" id="robotStatusText">Поиск робота...</span>
+        <div class="status-panel">
+            <div class="status-row">
+                <div class="status-item">
+                    <span class="status-icon">📱</span>
+                    <span class="status-text" id="phoneStatusText">Положение: анализ...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon" id="robotIcon">🤖</span>
+                    <span class="status-text" id="robotStatusText">Поиск робота...</span>
+                </div>
             </div>
-            <div>
-                <span class="speed-label">🌀 Скорость вращения:</span>
-                <span class="speed-value" id="rpmValue">0.0</span>
-                <span class="speed-label">об/мин</span>
+            <div class="status-row">
+                <div class="status-item" style="flex-direction: column; align-items: flex-start;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <span>🌀 Скорость вращения:</span>
+                        <span class="speed-value" id="rpmValue">0.0</span>
+                        <span>об/мин</span>
+                    </div>
+                    <div class="gyro-indicator">
+                        <div class="gyro-fill" id="gyroFill"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="robotDetectedAlert" style="display: none;" class="warning-badge">
-            🤖 РОБОТ ОБНАРУЖЕН! Анализ скорости...
+        <div id="systemActiveAlert" style="display: none;" class="info-badge">
+            ✅ СИСТЕМА АКТИВНА: телефон неподвижен + робот обнаружен
+        </div>
+
+        <div id="phoneMovingAlert" style="display: none;" class="warning-badge">
+            📱 ТЕЛЕФОН ДВИЖЕТСЯ! Скорость не измеряется. Поставьте телефон на устойчивую поверхность
+        </div>
+
+        <div id="noRobotAlert" style="display: none;" class="warning-badge">
+            🤖 РОБОТ НЕ ОБНАРУЖЕН! Наведите камеру на робота с колесами или гусеницами
         </div>
 
         <div id="violationAlert" style="display: none;" class="violation-badge">
@@ -322,12 +377,13 @@
         </div>
 
         <div class="info-note">
-            🎯 <strong>Распознавание роботов</strong><br>
-            • Анализируются объекты с колесами или гусеницами<br>
-            • Скорость отслеживается ТОЛЬКО при обнаружении робота<br>
-            • Превышение > 50 об/мин → автоматический штраф<br>
-            <div class="features-list">
-            🔍 Распознаваемые признаки: круглая форма (колеса), прямоугольные гусеницы, механическая структура
+            🎯 <strong>Условия активации спидометра:</strong><br>
+            • ✅ Телефон НЕПОДВИЖЕН (стоит на столе или закреплен)<br>
+            • ✅ Обнаружен РОБОТ с колесами или гусеницами<br>
+            • ❌ Если телефон в руках или движется → скорость = 0<br>
+            • ⚡ Превышение > 50 об/мин → автоматический штраф<br>
+            <div class="features-list" style="margin-top: 8px;">
+            📊 Индикатор стабильности показывает уровень неподвижности телефона
             </div>
         </div>
     </div>
@@ -336,7 +392,7 @@
         <div id="finesListContainer" class="fines-list">
             <div class="empty-fines">📭 Нет зафиксированных нарушений</div>
         </div>
-        <button id="clearFinsBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
+        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
     </div>
 </div>
 
@@ -377,7 +433,7 @@
     let finesArray = [];
 
     function loadFinesFromStorage() {
-        const stored = localStorage.getItem('robot_speed_fines_v2');
+        const stored = localStorage.getItem('robot_speed_fines_v3');
         if (stored) {
             try {
                 finesArray = JSON.parse(stored);
@@ -390,7 +446,7 @@
     }
 
     function saveFinesToStorage() {
-        localStorage.setItem('robot_speed_fines_v2', JSON.stringify(finesArray));
+        localStorage.setItem('robot_speed_fines_v3', JSON.stringify(finesArray));
     }
 
     function addFineFromVideo(videoElement, rpmValue, robotType) {
@@ -473,33 +529,146 @@
         }
     }
     
-    // === РАСПОЗНАВАНИЕ РОБОТОВ (колеса/гусеницы) ===
-    // Используем компьютерное зрение на основе анализа формы и текстур
+    // === ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА (акселерометр/гироскоп) ===
+    let isPhoneMoving = true; // по умолчанию считаем что движется
+    let motionStability = 0; // 0-100, чем выше тем стабильнее
+    let lastMotionData = null;
     
-    let robotDetected = false;
-    let robotType = null; // 'wheels' или 'tracks'
-    let currentRPM = 0;
-    let violationCooldown = false;
-    let lastViolationTime = 0;
-    const VIOLATION_COOLDOWN_MS = 2000;
+    function initMotionDetection() {
+        if (window.DeviceMotionEvent) {
+            // Запрашиваем разрешение для iOS
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                // Для iOS нужно разрешение от пользователя
+                document.body.addEventListener('click', () => {
+                    DeviceMotionEvent.requestPermission()
+                        .then(permissionState => {
+                            if (permissionState === 'granted') {
+                                window.addEventListener('devicemotion', handleMotionEvent);
+                            }
+                        })
+                        .catch(console.error);
+                }, { once: true });
+            } else {
+                // Для Android и других
+                window.addEventListener('devicemotion', handleMotionEvent);
+            }
+        } else {
+            console.warn('DeviceMotion не поддерживается');
+            // Если нет акселерометра, считаем телефон неподвижным (для совместимости)
+            isPhoneMoving = false;
+            updatePhoneStatus();
+        }
+    }
     
-    // Функция распознавания колес и гусениц через анализ изображения
-    function detectRobotWithWheelsOrTracks(imageData, width, height) {
-        // Анализируем изображение на наличие признаков колес (круглые формы) 
-        // и гусениц (прямоугольные повторяющиеся паттерны)
+    let motionHistory = [];
+    
+    function handleMotionEvent(event) {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
         
+        // Вычисляем величину ускорения по всем осям
+        const totalAcc = Math.sqrt(
+            (acc.x || 0) * (acc.x || 0) + 
+            (acc.y || 0) * (acc.y || 0) + 
+            (acc.z || 0) * (acc.z || 0)
+        );
+        
+        // Нормализуем относительно гравитации (~9.8)
+        const normalizedAcc = Math.abs(totalAcc - 9.8);
+        
+        // Сохраняем историю для сглаживания
+        motionHistory.push(normalizedAcc);
+        if (motionHistory.length > 20) motionHistory.shift();
+        
+        // Вычисляем среднее движение за последние кадры
+        const avgMotion = motionHistory.reduce((a, b) => a + b, 0) / motionHistory.length;
+        
+        // Определяем стабильность (0-100)
+        // Чем меньше avgMotion, тем стабильнее
+        let stability = Math.max(0, Math.min(100, 100 - (avgMotion * 15)));
+        motionStability = stability;
+        
+        // Порог: если стабильность > 70%, считаем телефон неподвижным
+        const wasMoving = isPhoneMoving;
+        isPhoneMoving = stability < 70;
+        
+        // Обновляем UI
+        updatePhoneStatus();
+        updateGyroIndicator(stability);
+        
+        // Если состояние изменилось, выводим уведомление
+        if (wasMoving !== isPhoneMoving) {
+            if (!isPhoneMoving) {
+                showTempAlert('phoneMovingAlert', false);
+                showTempAlert('systemActiveAlert', true, 2000);
+            } else {
+                showTempAlert('phoneMovingAlert', true, 2000);
+                showTempAlert('systemActiveAlert', false);
+            }
+        }
+    }
+    
+    function updatePhoneStatus() {
+        const phoneStatusText = document.getElementById('phoneStatusText');
+        const phoneIcon = document.querySelector('.status-item:first-child .status-icon');
+        
+        if (isPhoneMoving) {
+            phoneStatusText.innerHTML = '📱 ТЕЛЕФОН ДВИЖЕТСЯ';
+            phoneStatusText.className = 'status-text status-inactive';
+        } else {
+            phoneStatusText.innerHTML = '✅ ТЕЛЕФОН НЕПОДВИЖЕН';
+            phoneStatusText.className = 'status-text status-active';
+        }
+    }
+    
+    function updateGyroIndicator(stability) {
+        const gyroFill = document.getElementById('gyroFill');
+        if (gyroFill) {
+            gyroFill.style.width = stability + '%';
+            if (stability > 70) {
+                gyroFill.style.background = '#10b981';
+            } else if (stability > 40) {
+                gyroFill.style.background = '#f59e0b';
+            } else {
+                gyroFill.style.background = '#ef4444';
+            }
+        }
+    }
+    
+    function showTempAlert(alertId, show, duration = 2000) {
+        const alert = document.getElementById(alertId);
+        if (alert) {
+            if (show) {
+                alert.style.display = 'flex';
+                if (duration > 0) {
+                    setTimeout(() => {
+                        if (alert.style.display === 'flex') {
+                            alert.style.display = 'none';
+                        }
+                    }, duration);
+                }
+            } else {
+                alert.style.display = 'none';
+            }
+        }
+    }
+    
+    // === РАСПОЗНАВАНИЕ РОБОТОВ ===
+    let robotDetected = false;
+    let robotType = null;
+    
+    function detectRobotWithWheelsOrTracks(imageData, width, height) {
         const data = imageData.data;
         let edgePoints = [];
         let circularPatterns = 0;
         let linearPatterns = 0;
         
-        // Упрощенное детектирование границ (анализ яркости)
+        // Анализ границ
         for (let y = 10; y < height - 10; y += 8) {
             for (let x = 10; x < width - 10; x += 8) {
                 const idx = (y * width + x) * 4;
                 const brightness = (data[idx] + data[idx+1] + data[idx+2]) / 3;
                 
-                // Ищем контрастные переходы (потенциальные края колес/гусениц)
                 const idxRight = (y * width + (x + 5)) * 4;
                 const brightnessRight = (data[idxRight] + data[idxRight+1] + data[idxRight+2]) / 3;
                 const idxDown = ((y + 5) * width + x) * 4;
@@ -516,16 +685,14 @@
         
         if (edgePoints.length < 15) return { detected: false, type: null };
         
-        // Анализ на наличие круговых паттернов (колеса)
+        // Поиск круговых паттернов (колеса)
         for (let i = 0; i < edgePoints.length && i < 100; i++) {
             for (let j = i + 1; j < edgePoints.length && j < i + 50; j++) {
                 const dx = edgePoints[j].x - edgePoints[i].x;
                 const dy = edgePoints[j].y - edgePoints[i].y;
                 const dist = Math.sqrt(dx*dx + dy*dy);
                 
-                // Ищем потенциальные дуги окружности (расстояние между точками как диаметр)
                 if (dist > 15 && dist < 80) {
-                    // Проверяем наличие других точек на потенциальной окружности
                     let pointsOnCircle = 0;
                     for (let k = 0; k < edgePoints.length && k < 200; k++) {
                         if (k === i || k === j) continue;
@@ -544,14 +711,13 @@
             }
         }
         
-        // Анализ на линейные паттерны (гусеницы)
+        // Поиск линейных паттернов (гусеницы)
         for (let i = 0; i < edgePoints.length - 10; i++) {
             let collinearPoints = 1;
             for (let j = i + 1; j < Math.min(i + 15, edgePoints.length); j++) {
                 const dx = edgePoints[j].x - edgePoints[i].x;
                 const dy = edgePoints[j].y - edgePoints[i].y;
                 if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
-                    // Проверка на коллинеарность
                     let angle = Math.atan2(dy, dx);
                     let sameDirection = true;
                     for (let k = i + 2; k < j; k++) {
@@ -569,7 +735,6 @@
             if (collinearPoints > 4) linearPatterns++;
         }
         
-        // Определяем тип робота
         let detected = false;
         let type = null;
         
@@ -581,7 +746,6 @@
             type = 'tracks';
         }
         
-        // Дополнительная проверка на наличие характерных механических форм
         if (edgePoints.length > 40 && (circularPatterns > 0 || linearPatterns > 1)) {
             detected = true;
             if (!type) type = linearPatterns > circularPatterns ? 'tracks' : 'wheels';
@@ -590,35 +754,97 @@
         return { detected, type };
     }
     
-    // Анализ движения для расчета RPM (только если обнаружен робот)
+    // === ОСНОВНОЙ ЦИКЛ АНАЛИЗА ===
     const video = document.getElementById('video');
     const overlayCanvas = document.getElementById('overlayCanvas');
     const rpmSpan = document.getElementById('rpmValue');
     const violationAlertDiv = document.getElementById('violationAlert');
-    const robotDetectedAlert = document.getElementById('robotDetectedAlert');
     const robotStatusText = document.getElementById('robotStatusText');
-    const robotIcon = document.getElementById('robotIcon');
+    const robotIconSpan = document.getElementById('robotIcon');
     
-    let previousFrame = null;
     let previousGray = null;
-    let lastTimestamp = null;
     let filteredRPM = 0;
+    let currentRPM = 0;
     let animationId = null;
-    let detectionCounter = 0;
+    let violationCooldown = false;
+    let lastViolationTime = 0;
+    const VIOLATION_COOLDOWN_MS = 2000;
+    let lastDetectionTime = 0;
     
-    async function initCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-            });
-            video.srcObject = stream;
-            await video.play();
-            startAnalysis();
-        } catch (err) {
-            console.error("Ошибка доступа к камере:", err);
-            rpmSpan.innerText = "ОШИБКА";
-            robotStatusText.innerText = "Нет доступа к камере";
-            robotStatusText.style.color = "#ef4444";
+    // Флаг активации спидометра (только когда телефон неподвижен И робот обнаружен)
+    let isSpeedometerActive = false;
+    
+    function updateSystemStatus() {
+        isSpeedometerActive = (!isPhoneMoving && robotDetected);
+        
+        if (isSpeedometerActive) {
+            // Система активна
+            if (robotDetected) {
+                showTempAlert('noRobotAlert', false);
+            }
+            showTempAlert('systemActiveAlert', true, 0);
+            showTempAlert('phoneMovingAlert', false);
+        } else {
+            showTempAlert('systemActiveAlert', false);
+            if (isPhoneMoving) {
+                showTempAlert('phoneMovingAlert', true, 0);
+                showTempAlert('noRobotAlert', false);
+            } else if (!robotDetected) {
+                showTempAlert('noRobotAlert', true, 0);
+                showTempAlert('phoneMovingAlert', false);
+            } else {
+                showTempAlert('phoneMovingAlert', false);
+                showTempAlert('noRobotAlert', false);
+            }
+        }
+        
+        // Если система не активна - обнуляем скорость
+        if (!isSpeedometerActive) {
+            currentRPM = 0;
+            filteredRPM = 0;
+            rpmSpan.innerText = "0.0";
+            if (violationAlertDiv) violationAlertDiv.style.display = 'none';
+        }
+    }
+    
+    function updateRobotStatus() {
+        if (robotDetected) {
+            robotStatusText.innerHTML = robotType === 'wheels' ? 'РОБОТ С КОЛЁСАМИ' : 'РОБОТ НА ГУСЕНИЦАХ';
+            robotStatusText.className = 'status-text status-active';
+            robotIconSpan.innerHTML = robotType === 'wheels' ? '⚙️' : '🐛';
+        } else {
+            robotStatusText.innerHTML = 'РОБОТ НЕ ОБНАРУЖЕН';
+            robotStatusText.className = 'status-text status-inactive';
+            robotIconSpan.innerHTML = '❌';
+        }
+        updateSystemStatus();
+    }
+    
+    function drawDetectionOverlay(width, height, detected, type) {
+        const ctx = overlayCanvas.getContext('2d');
+        overlayCanvas.width = video.videoWidth;
+        overlayCanvas.height = video.videoHeight;
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        
+        if (detected && !isPhoneMoving) {
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
+            ctx.setLineDash([]);
+            ctx.font = 'bold 16px system-ui';
+            ctx.fillStyle = '#10b981';
+            const label = type === 'wheels' ? '⚙️ РОБОТ (КОЛЕСА)' : '🐛 РОБОТ (ГУСЕНИЦЫ)';
+            ctx.fillText(label, 20, 40);
+        } else if (detected && isPhoneMoving) {
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
+            ctx.setLineDash([]);
+            ctx.font = 'bold 16px system-ui';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText('🤖 РОБОТ (телефон движется)', 20, 40);
         }
     }
     
@@ -654,29 +880,22 @@
         return sumDiff / (len / 3);
     }
     
-    function drawDetectionOverlay(width, height, detected, type) {
-        const ctx = overlayCanvas.getContext('2d');
-        overlayCanvas.width = video.videoWidth;
-        overlayCanvas.height = video.videoHeight;
-        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-        
-        if (detected) {
-            ctx.strokeStyle = '#10b981';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([10, 5]);
-            ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
-            ctx.setLineDash([]);
-            ctx.font = 'bold 16px system-ui';
-            ctx.fillStyle = '#10b981';
-            ctx.shadowBlur = 0;
-            const label = type === 'wheels' ? '⚙️ РОБОТ (КОЛЕСА)' : '🐛 РОБОТ (ГУСЕНИЦЫ)';
-            ctx.fillText(label, 20, 40);
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+            });
+            video.srcObject = stream;
+            await video.play();
+            startAnalysis();
+        } catch (err) {
+            console.error("Ошибка доступа к камере:", err);
+            rpmSpan.innerText = "ОШИБКА";
+            robotStatusText.innerText = "Нет доступа к камере";
         }
     }
     
     function startAnalysis() {
-        let lastDetectionTime = 0;
-        
         function analyzeFrame(now) {
             if (!video.videoWidth || video.videoWidth === 0) {
                 animationId = requestAnimationFrame(analyzeFrame);
@@ -685,40 +904,20 @@
             
             const sampleWidth = Math.min(240, video.videoWidth);
             const sampleHeight = Math.floor((sampleWidth * video.videoHeight) / video.videoWidth);
-            
-            // Получаем изображение для распознавания
             const imageData = getImageData(video, sampleWidth, sampleHeight);
             
-            // Распознаем робота (каждые 10 кадров для производительности)
+            // Распознавание робота (каждые 200мс)
             if (Date.now() - lastDetectionTime > 200) {
                 const detection = detectRobotWithWheelsOrTracks(imageData, sampleWidth, sampleHeight);
                 robotDetected = detection.detected;
                 robotType = detection.type;
                 lastDetectionTime = Date.now();
-                
-                // Обновляем UI статуса робота
-                if (robotDetected) {
-                    robotStatusText.innerText = robotType === 'wheels' ? 'РОБОТ С КОЛЁСАМИ' : 'РОБОТ НА ГУСЕНИЦАХ';
-                    robotStatusText.style.color = '#10b981';
-                    robotIcon.innerText = robotType === 'wheels' ? '⚙️' : '🐛';
-                    robotDetectedAlert.style.display = 'flex';
-                    
-                    setTimeout(() => {
-                        if (robotDetectedAlert.style.display === 'flex')
-                            robotDetectedAlert.style.display = 'none';
-                    }, 2000);
-                } else {
-                    robotStatusText.innerText = 'РОБОТ НЕ ОБНАРУЖЕН';
-                    robotStatusText.style.color = '#ef4444';
-                    robotIcon.innerText = '❌';
-                    robotDetectedAlert.style.display = 'none';
-                }
-                
+                updateRobotStatus();
                 drawDetectionOverlay(video.videoWidth, video.videoHeight, robotDetected, robotType);
             }
             
-            // Анализ скорости ТОЛЬКО если обнаружен робот
-            if (robotDetected) {
+            // Анализ скорости ТОЛЬКО если система активна (телефон неподвижен И робот обнаружен)
+            if (isSpeedometerActive) {
                 const currentGray = getGrayFrame(imageData, sampleWidth, sampleHeight);
                 let motionLevel = 0;
                 
@@ -726,7 +925,7 @@
                     motionLevel = computeMotionMagnitude(previousGray, currentGray);
                 }
                 
-                // Расчет RPM (оборотов в минуту) на основе движения
+                // Расчет RPM
                 let rawRPM = motionLevel * 6.5;
                 if (rawRPM < 0) rawRPM = 0;
                 filteredRPM = filteredRPM * 0.7 + rawRPM * 0.3;
@@ -742,14 +941,12 @@
                     if (!violationCooldown && (nowMs - lastViolationTime) >= VIOLATION_COOLDOWN_MS) {
                         if (video.videoWidth > 0 && video.videoHeight > 0) {
                             const robotTypeName = robotType === 'wheels' ? 'wheels' : 'tracks';
-                            const success = addFineFromVideo(video, currentRPM, robotTypeName);
-                            if (success) {
-                                lastViolationTime = nowMs;
-                                violationCooldown = true;
-                                setTimeout(() => {
-                                    violationCooldown = false;
-                                }, VIOLATION_COOLDOWN_MS);
-                            }
+                            addFineFromVideo(video, currentRPM, robotTypeName);
+                            lastViolationTime = nowMs;
+                            violationCooldown = true;
+                            setTimeout(() => {
+                                violationCooldown = false;
+                            }, VIOLATION_COOLDOWN_MS);
                         }
                     }
                 } else {
@@ -758,10 +955,12 @@
                 
                 previousGray = currentGray;
             } else {
-                // Если робот не обнаружен - скорость 0
-                currentRPM = 0;
-                filteredRPM = 0;
-                rpmSpan.innerText = "0.0";
+                // Если система не активна - обнуляем и не анализируем движение
+                if (currentRPM !== 0) {
+                    currentRPM = 0;
+                    filteredRPM = 0;
+                    rpmSpan.innerText = "0.0";
+                }
                 if (violationAlertDiv) violationAlertDiv.style.display = 'none';
                 previousGray = null;
             }
@@ -772,10 +971,11 @@
         animationId = requestAnimationFrame(analyzeFrame);
     }
     
-    document.getElementById('clearFinsBtn').addEventListener('click', clearAllFines);
+    document.getElementById('clearFinesBtn').addEventListener('click', clearAllFines);
     
     loadFinesFromStorage();
     initCamera();
+    initMotionDetection();
     
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
