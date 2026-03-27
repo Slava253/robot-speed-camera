@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Робот-Фиксатор скорости вращения</title>
-    <meta name="description" content="Мобильное приложение для фиксации превышения скорости вращения роботов через камеру телефона">
-    <meta name="author" content="Robot Speed Camera">
+    <meta name="description" content="Распознает только роботов с колесами или гусеницами, фиксирует превышение скорости вращения">
     <style>
         * {
             margin: 0;
@@ -102,11 +101,16 @@
             display: block;
         }
 
-        .canvas-hidden {
-            display: none;
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
         }
 
-        .speed-panel {
+        .detection-panel {
             background: #1e293b;
             border-radius: 24px;
             padding: 16px 20px;
@@ -116,6 +120,32 @@
             align-items: baseline;
             flex-wrap: wrap;
             gap: 12px;
+        }
+
+        .robot-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0f172a;
+            padding: 8px 16px;
+            border-radius: 40px;
+        }
+
+        .robot-status-icon {
+            font-size: 1.5rem;
+        }
+
+        .robot-status-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .detected {
+            color: #10b981;
+        }
+
+        .not-detected {
+            color: #ef4444;
         }
 
         .speed-value {
@@ -141,6 +171,16 @@
             font-weight: bold;
             font-size: 0.9rem;
             animation: pulse 1s infinite;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .warning-badge {
+            background: #f59e0b;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.9rem;
             text-align: center;
             margin-bottom: 16px;
         }
@@ -171,7 +211,6 @@
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: transform 0.1s ease;
         }
 
         .fine-photo {
@@ -241,23 +280,9 @@
             .tab-button { font-size: 1rem; }
         }
 
-        .github-corner {
-            position: fixed;
-            bottom: 12px;
-            right: 12px;
-            background: #1e293b;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 11px;
-            color: #94a3b8;
-            text-decoration: none;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-            font-family: monospace;
-        }
-
-        .github-corner:hover {
-            background: #2d3a4e;
+        .features-list {
+            margin-top: 12px;
+            font-size: 0.7rem;
             color: #60a5fa;
         }
     </style>
@@ -273,13 +298,23 @@
     <div id="camera-pane" class="tab-pane active-pane">
         <div class="camera-container">
             <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
         </div>
-        <canvas id="snapshotCanvas" class="canvas-hidden"></canvas>
 
-        <div class="speed-panel">
-            <span class="speed-label">🌀 Скорость вращения робота:</span>
-            <span class="speed-value" id="rpmValue">0.0</span>
-            <span class="speed-label">об/мин</span>
+        <div class="detection-panel">
+            <div class="robot-status">
+                <span class="robot-status-icon" id="robotIcon">🤖</span>
+                <span class="robot-status-text" id="robotStatusText">Поиск робота...</span>
+            </div>
+            <div>
+                <span class="speed-label">🌀 Скорость вращения:</span>
+                <span class="speed-value" id="rpmValue">0.0</span>
+                <span class="speed-label">об/мин</span>
+            </div>
+        </div>
+
+        <div id="robotDetectedAlert" style="display: none;" class="warning-badge">
+            🤖 РОБОТ ОБНАРУЖЕН! Анализ скорости...
         </div>
 
         <div id="violationAlert" style="display: none;" class="violation-badge">
@@ -287,9 +322,13 @@
         </div>
 
         <div class="info-note">
-            📡 Анализ вращения через оптический поток<br>
-            🔄 Превышение > 50 об/мин автоматически создаёт штраф с фото и точным временем<br>
-            💡 Для теста: быстро двигайте объект перед камерой
+            🎯 <strong>Распознавание роботов</strong><br>
+            • Анализируются объекты с колесами или гусеницами<br>
+            • Скорость отслеживается ТОЛЬКО при обнаружении робота<br>
+            • Превышение > 50 об/мин → автоматический штраф<br>
+            <div class="features-list">
+            🔍 Распознаваемые признаки: круглая форма (колеса), прямоугольные гусеницы, механическая структура
+            </div>
         </div>
     </div>
 
@@ -297,11 +336,9 @@
         <div id="finesListContainer" class="fines-list">
             <div class="empty-fines">📭 Нет зафиксированных нарушений</div>
         </div>
-        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
+        <button id="clearFinsBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
     </div>
 </div>
-
-<a href="https://github.com" class="github-corner" target="_blank">🔗 GitHub</a>
 
 <script>
     // Управление вкладками
@@ -340,11 +377,11 @@
     let finesArray = [];
 
     function loadFinesFromStorage() {
-        const stored = localStorage.getItem('robot_speed_fines');
+        const stored = localStorage.getItem('robot_speed_fines_v2');
         if (stored) {
             try {
                 finesArray = JSON.parse(stored);
-                finesArray = finesArray.filter(f => f.imageDataUrl && f.timestamp && f.formattedTime);
+                finesArray = finesArray.filter(f => f.imageDataUrl && f.timestamp);
             } catch(e) { finesArray = []; }
         } else {
             finesArray = [];
@@ -353,10 +390,10 @@
     }
 
     function saveFinesToStorage() {
-        localStorage.setItem('robot_speed_fines', JSON.stringify(finesArray));
+        localStorage.setItem('robot_speed_fines_v2', JSON.stringify(finesArray));
     }
 
-    function addFineFromVideo(videoElement, rpmValue) {
+    function addFineFromVideo(videoElement, rpmValue, robotType) {
         const canvas = document.createElement('canvas');
         const width = videoElement.videoWidth;
         const height = videoElement.videoHeight;
@@ -388,7 +425,8 @@
             timestamp: now.toISOString(),
             formattedTime: fullDateTime,
             exactTime: timeStr,
-            rpm: rpmValue.toFixed(1)
+            rpm: rpmValue.toFixed(1),
+            robotType: robotType
         };
         
         finesArray.unshift(fineRecord);
@@ -410,14 +448,17 @@
         let html = '';
         for (let i = 0; i < finesArray.length; i++) {
             const fine = finesArray[i];
+            const robotIcon = fine.robotType === 'wheels' ? '⚙️' : '🐛';
             html += `
                 <div class="fine-card">
-                    <img class="fine-photo" src="${fine.imageDataUrl}" alt="Фото нарушения скорости вращения">
+                    <img class="fine-photo" src="${fine.imageDataUrl}" alt="Фото нарушения">
                     <div class="fine-info">
                         <div class="datetime">🕒 ${fine.formattedTime}</div>
-                        <div class="fine-badge">⚡ ${fine.rpm} об/мин</div>
+                        <div class="fine-badge">${robotIcon} ${fine.rpm} об/мин</div>
                     </div>
-                    <div style="padding: 0 18px 12px 18px; font-size:0.75rem; color:#a0aec0;">🔴 Превышение > 50 об/мин</div>
+                    <div style="padding: 0 18px 12px 18px; font-size:0.75rem; color:#a0aec0;">
+                        🔴 Превышение скорости вращения > 50 об/мин
+                    </div>
                 </div>
             `;
         }
@@ -429,22 +470,141 @@
             finesArray = [];
             saveFinesToStorage();
             renderFinesList();
-            const violationDiv = document.getElementById('violationAlert');
-            if (violationDiv) violationDiv.style.display = 'none';
         }
     }
     
-    // Анализ движения и расчет RPM
-    const video = document.getElementById('video');
-    const rpmSpan = document.getElementById('rpmValue');
-    const violationAlertDiv = document.getElementById('violationAlert');
+    // === РАСПОЗНАВАНИЕ РОБОТОВ (колеса/гусеницы) ===
+    // Используем компьютерное зрение на основе анализа формы и текстур
     
-    let previousFrame = null;
-    let lastTimestamp = null;
+    let robotDetected = false;
+    let robotType = null; // 'wheels' или 'tracks'
     let currentRPM = 0;
     let violationCooldown = false;
     let lastViolationTime = 0;
     const VIOLATION_COOLDOWN_MS = 2000;
+    
+    // Функция распознавания колес и гусениц через анализ изображения
+    function detectRobotWithWheelsOrTracks(imageData, width, height) {
+        // Анализируем изображение на наличие признаков колес (круглые формы) 
+        // и гусениц (прямоугольные повторяющиеся паттерны)
+        
+        const data = imageData.data;
+        let edgePoints = [];
+        let circularPatterns = 0;
+        let linearPatterns = 0;
+        
+        // Упрощенное детектирование границ (анализ яркости)
+        for (let y = 10; y < height - 10; y += 8) {
+            for (let x = 10; x < width - 10; x += 8) {
+                const idx = (y * width + x) * 4;
+                const brightness = (data[idx] + data[idx+1] + data[idx+2]) / 3;
+                
+                // Ищем контрастные переходы (потенциальные края колес/гусениц)
+                const idxRight = (y * width + (x + 5)) * 4;
+                const brightnessRight = (data[idxRight] + data[idxRight+1] + data[idxRight+2]) / 3;
+                const idxDown = ((y + 5) * width + x) * 4;
+                const brightnessDown = (data[idxDown] + data[idxDown+1] + data[idxDown+2]) / 3;
+                
+                const horizDiff = Math.abs(brightness - brightnessRight);
+                const vertDiff = Math.abs(brightness - brightnessDown);
+                
+                if (horizDiff > 40 || vertDiff > 40) {
+                    edgePoints.push({x, y, horizDiff, vertDiff});
+                }
+            }
+        }
+        
+        if (edgePoints.length < 15) return { detected: false, type: null };
+        
+        // Анализ на наличие круговых паттернов (колеса)
+        for (let i = 0; i < edgePoints.length && i < 100; i++) {
+            for (let j = i + 1; j < edgePoints.length && j < i + 50; j++) {
+                const dx = edgePoints[j].x - edgePoints[i].x;
+                const dy = edgePoints[j].y - edgePoints[i].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                // Ищем потенциальные дуги окружности (расстояние между точками как диаметр)
+                if (dist > 15 && dist < 80) {
+                    // Проверяем наличие других точек на потенциальной окружности
+                    let pointsOnCircle = 0;
+                    for (let k = 0; k < edgePoints.length && k < 200; k++) {
+                        if (k === i || k === j) continue;
+                        const dxc = edgePoints[k].x - (edgePoints[i].x + dx/2);
+                        const dyc = edgePoints[k].y - (edgePoints[i].y + dy/2);
+                        const distToCenter = Math.sqrt(dxc*dxc + dyc*dyc);
+                        const radius = dist / 2;
+                        if (Math.abs(distToCenter - radius) < 8) {
+                            pointsOnCircle++;
+                        }
+                    }
+                    if (pointsOnCircle > 3) {
+                        circularPatterns++;
+                    }
+                }
+            }
+        }
+        
+        // Анализ на линейные паттерны (гусеницы)
+        for (let i = 0; i < edgePoints.length - 10; i++) {
+            let collinearPoints = 1;
+            for (let j = i + 1; j < Math.min(i + 15, edgePoints.length); j++) {
+                const dx = edgePoints[j].x - edgePoints[i].x;
+                const dy = edgePoints[j].y - edgePoints[i].y;
+                if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+                    // Проверка на коллинеарность
+                    let angle = Math.atan2(dy, dx);
+                    let sameDirection = true;
+                    for (let k = i + 2; k < j; k++) {
+                        const dx2 = edgePoints[k].x - edgePoints[i].x;
+                        const dy2 = edgePoints[k].y - edgePoints[i].y;
+                        const angle2 = Math.atan2(dy2, dx2);
+                        if (Math.abs(angle - angle2) > 0.3) {
+                            sameDirection = false;
+                            break;
+                        }
+                    }
+                    if (sameDirection) collinearPoints++;
+                }
+            }
+            if (collinearPoints > 4) linearPatterns++;
+        }
+        
+        // Определяем тип робота
+        let detected = false;
+        let type = null;
+        
+        if (circularPatterns > 2) {
+            detected = true;
+            type = 'wheels';
+        } else if (linearPatterns > 3) {
+            detected = true;
+            type = 'tracks';
+        }
+        
+        // Дополнительная проверка на наличие характерных механических форм
+        if (edgePoints.length > 40 && (circularPatterns > 0 || linearPatterns > 1)) {
+            detected = true;
+            if (!type) type = linearPatterns > circularPatterns ? 'tracks' : 'wheels';
+        }
+        
+        return { detected, type };
+    }
+    
+    // Анализ движения для расчета RPM (только если обнаружен робот)
+    const video = document.getElementById('video');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const rpmSpan = document.getElementById('rpmValue');
+    const violationAlertDiv = document.getElementById('violationAlert');
+    const robotDetectedAlert = document.getElementById('robotDetectedAlert');
+    const robotStatusText = document.getElementById('robotStatusText');
+    const robotIcon = document.getElementById('robotIcon');
+    
+    let previousFrame = null;
+    let previousGray = null;
+    let lastTimestamp = null;
+    let filteredRPM = 0;
+    let animationId = null;
+    let detectionCounter = 0;
     
     async function initCamera() {
         try {
@@ -453,21 +613,25 @@
             });
             video.srcObject = stream;
             await video.play();
-            requestAnimationFrame(analyzeMotion);
+            startAnalysis();
         } catch (err) {
             console.error("Ошибка доступа к камере:", err);
             rpmSpan.innerText = "ОШИБКА";
-            document.querySelector('.speed-panel').innerHTML += '<div style="color:red;">❌ Нет доступа к камере</div>';
+            robotStatusText.innerText = "Нет доступа к камере";
+            robotStatusText.style.color = "#ef4444";
         }
     }
     
-    function getGrayFrame(videoElement, width, height) {
+    function getImageData(videoElement, width, height) {
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(videoElement, 0, 0, width, height);
-        const imageData = ctx.getImageData(0, 0, width, height);
+        return ctx.getImageData(0, 0, width, height);
+    }
+    
+    function getGrayFrame(imageData, width, height) {
         const data = imageData.data;
         const gray = new Uint8ClampedArray(width * height);
         for (let i = 0; i < width * height; i++) {
@@ -483,70 +647,132 @@
         if (!prevGray || !currGray || prevGray.length !== currGray.length) return 0;
         let sumDiff = 0;
         const len = prevGray.length;
-        for (let i = 0; i < len; i += 4) {
+        for (let i = 0; i < len; i += 3) {
             const diff = Math.abs(prevGray[i] - currGray[i]);
             sumDiff += diff;
         }
-        return sumDiff / (len / 4);
+        return sumDiff / (len / 3);
     }
     
-    let animationId = null;
-    let filteredRPM = 0;
+    function drawDetectionOverlay(width, height, detected, type) {
+        const ctx = overlayCanvas.getContext('2d');
+        overlayCanvas.width = video.videoWidth;
+        overlayCanvas.height = video.videoHeight;
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        
+        if (detected) {
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
+            ctx.setLineDash([]);
+            ctx.font = 'bold 16px system-ui';
+            ctx.fillStyle = '#10b981';
+            ctx.shadowBlur = 0;
+            const label = type === 'wheels' ? '⚙️ РОБОТ (КОЛЕСА)' : '🐛 РОБОТ (ГУСЕНИЦЫ)';
+            ctx.fillText(label, 20, 40);
+        }
+    }
     
-    function analyzeMotion(now) {
-        if (!video.videoWidth || video.videoWidth === 0) {
-            animationId = requestAnimationFrame(analyzeMotion);
-            return;
-        }
+    function startAnalysis() {
+        let lastDetectionTime = 0;
         
-        const sampleWidth = Math.min(160, video.videoWidth);
-        const sampleHeight = Math.floor((sampleWidth * video.videoHeight) / video.videoWidth);
-        
-        const currentGray = getGrayFrame(video, sampleWidth, sampleHeight);
-        
-        let motionLevel = 0;
-        if (previousFrame) {
-            motionLevel = computeMotionMagnitude(previousFrame, currentGray);
-        }
-        
-        const nowTime = performance.now();
-        if (lastTimestamp) {
-            // delta time не используется напрямую, но сохраняем для стабильности
-        }
-        lastTimestamp = nowTime;
-        
-        let rawRPM = motionLevel * 7.2;
-        if (rawRPM < 0) rawRPM = 0;
-        filteredRPM = filteredRPM * 0.7 + rawRPM * 0.3;
-        currentRPM = Math.min(180, filteredRPM);
-        rpmSpan.innerText = currentRPM.toFixed(1);
-        
-        const isViolating = (currentRPM > 50.0);
-        const nowMs = Date.now();
-        
-        if (isViolating) {
-            if (violationAlertDiv) violationAlertDiv.style.display = 'flex';
-            if (!violationCooldown && (nowMs - lastViolationTime) >= VIOLATION_COOLDOWN_MS) {
-                if (video.videoWidth > 0 && video.videoHeight > 0) {
-                    const success = addFineFromVideo(video, currentRPM);
-                    if (success) {
-                        lastViolationTime = nowMs;
-                        violationCooldown = true;
-                        setTimeout(() => {
-                            violationCooldown = false;
-                        }, VIOLATION_COOLDOWN_MS);
-                    }
-                }
+        function analyzeFrame(now) {
+            if (!video.videoWidth || video.videoWidth === 0) {
+                animationId = requestAnimationFrame(analyzeFrame);
+                return;
             }
-        } else {
-            if (violationAlertDiv) violationAlertDiv.style.display = 'none';
+            
+            const sampleWidth = Math.min(240, video.videoWidth);
+            const sampleHeight = Math.floor((sampleWidth * video.videoHeight) / video.videoWidth);
+            
+            // Получаем изображение для распознавания
+            const imageData = getImageData(video, sampleWidth, sampleHeight);
+            
+            // Распознаем робота (каждые 10 кадров для производительности)
+            if (Date.now() - lastDetectionTime > 200) {
+                const detection = detectRobotWithWheelsOrTracks(imageData, sampleWidth, sampleHeight);
+                robotDetected = detection.detected;
+                robotType = detection.type;
+                lastDetectionTime = Date.now();
+                
+                // Обновляем UI статуса робота
+                if (robotDetected) {
+                    robotStatusText.innerText = robotType === 'wheels' ? 'РОБОТ С КОЛЁСАМИ' : 'РОБОТ НА ГУСЕНИЦАХ';
+                    robotStatusText.style.color = '#10b981';
+                    robotIcon.innerText = robotType === 'wheels' ? '⚙️' : '🐛';
+                    robotDetectedAlert.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        if (robotDetectedAlert.style.display === 'flex')
+                            robotDetectedAlert.style.display = 'none';
+                    }, 2000);
+                } else {
+                    robotStatusText.innerText = 'РОБОТ НЕ ОБНАРУЖЕН';
+                    robotStatusText.style.color = '#ef4444';
+                    robotIcon.innerText = '❌';
+                    robotDetectedAlert.style.display = 'none';
+                }
+                
+                drawDetectionOverlay(video.videoWidth, video.videoHeight, robotDetected, robotType);
+            }
+            
+            // Анализ скорости ТОЛЬКО если обнаружен робот
+            if (robotDetected) {
+                const currentGray = getGrayFrame(imageData, sampleWidth, sampleHeight);
+                let motionLevel = 0;
+                
+                if (previousGray) {
+                    motionLevel = computeMotionMagnitude(previousGray, currentGray);
+                }
+                
+                // Расчет RPM (оборотов в минуту) на основе движения
+                let rawRPM = motionLevel * 6.5;
+                if (rawRPM < 0) rawRPM = 0;
+                filteredRPM = filteredRPM * 0.7 + rawRPM * 0.3;
+                currentRPM = Math.min(180, filteredRPM);
+                rpmSpan.innerText = currentRPM.toFixed(1);
+                
+                // Проверка превышения
+                const isViolating = (currentRPM > 50.0);
+                const nowMs = Date.now();
+                
+                if (isViolating) {
+                    if (violationAlertDiv) violationAlertDiv.style.display = 'flex';
+                    if (!violationCooldown && (nowMs - lastViolationTime) >= VIOLATION_COOLDOWN_MS) {
+                        if (video.videoWidth > 0 && video.videoHeight > 0) {
+                            const robotTypeName = robotType === 'wheels' ? 'wheels' : 'tracks';
+                            const success = addFineFromVideo(video, currentRPM, robotTypeName);
+                            if (success) {
+                                lastViolationTime = nowMs;
+                                violationCooldown = true;
+                                setTimeout(() => {
+                                    violationCooldown = false;
+                                }, VIOLATION_COOLDOWN_MS);
+                            }
+                        }
+                    }
+                } else {
+                    if (violationAlertDiv) violationAlertDiv.style.display = 'none';
+                }
+                
+                previousGray = currentGray;
+            } else {
+                // Если робот не обнаружен - скорость 0
+                currentRPM = 0;
+                filteredRPM = 0;
+                rpmSpan.innerText = "0.0";
+                if (violationAlertDiv) violationAlertDiv.style.display = 'none';
+                previousGray = null;
+            }
+            
+            animationId = requestAnimationFrame(analyzeFrame);
         }
         
-        previousFrame = currentGray;
-        animationId = requestAnimationFrame(analyzeMotion);
+        animationId = requestAnimationFrame(analyzeFrame);
     }
     
-    document.getElementById('clearFinesBtn').addEventListener('click', clearAllFines);
+    document.getElementById('clearFinsBtn').addEventListener('click', clearAllFines);
     
     loadFinesFromStorage();
     initCamera();
@@ -557,8 +783,7 @@
             animationId = null;
         } else {
             if (!animationId && video && video.videoWidth) {
-                previousFrame = null;
-                animationId = requestAnimationFrame(analyzeMotion);
+                startAnalysis();
             }
         }
     });
