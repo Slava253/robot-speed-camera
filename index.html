@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Робот-Радар | Фиксация скорости вращения</title>
+    <title>Робот-Радар | Автоматическое измерение скорости</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,6 @@
             overflow: hidden;
         }
 
-        /* Вкладки */
         .tab-bar {
             background: rgba(17, 24, 39, 0.95);
             backdrop-filter: blur(10px);
@@ -65,7 +64,6 @@
             display: block;
         }
 
-        /* Контейнер камеры с увеличенным углом обзора */
         .camera-container {
             background: #000;
             border-radius: 24px;
@@ -82,7 +80,6 @@
             min-height: 300px;
             object-fit: cover;
             display: block;
-            transform: scaleX(1);
         }
 
         .overlay-canvas {
@@ -94,7 +91,6 @@
             pointer-events: none;
         }
 
-        /* Статус панель */
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -131,8 +127,13 @@
         .status-active { color: #10b981; }
         .status-inactive { color: #ef4444; }
         .status-warning { color: #f59e0b; }
+        .status-measuring { color: #facc15; animation: pulse 1s infinite; }
 
-        /* Спидометр */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         .speed-section {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
             backdrop-filter: blur(10px);
@@ -207,7 +208,6 @@
             border-radius: 2px;
         }
 
-        /* Уведомления */
         .alert {
             padding: 12px 16px;
             border-radius: 16px;
@@ -232,15 +232,14 @@
 
         .alert-success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
         .alert-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .alert-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); animation: pulse 1s infinite; }
+        .alert-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); animation: blink 1s infinite; }
         .alert-info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.9; transform: scale(1.01); }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; background: rgba(239, 68, 68, 0.3); }
         }
 
-        /* Список штрафов */
         .fines-list {
             display: flex;
             flex-direction: column;
@@ -253,18 +252,12 @@
             border-radius: 20px;
             overflow: hidden;
             border: 1px solid rgba(239, 68, 68, 0.3);
-            transition: transform 0.2s;
-        }
-
-        .fine-card:active {
-            transform: scale(0.98);
         }
 
         .fine-photo {
             width: 100%;
             max-height: 220px;
             object-fit: cover;
-            background: #0f172a;
         }
 
         .fine-info {
@@ -290,7 +283,6 @@
             padding: 5px 12px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.85rem;
         }
 
         .empty-fines {
@@ -334,9 +326,14 @@
             margin-top: 8px;
         }
 
-        @media (max-width: 500px) {
-            .speed-value { font-size: 3rem; }
-            .status-card { padding: 8px; }
+        .measuring-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #facc15;
+            animation: blink 1s infinite;
+            margin-right: 6px;
         }
     </style>
 </head>
@@ -368,7 +365,10 @@
         </div>
 
         <div class="speed-section">
-            <div class="speed-title">🌀 СКОРОСТЬ ВРАЩЕНИЯ</div>
+            <div class="speed-title">
+                <span id="measuringIndicator" style="display: none;"><span class="measuring-indicator"></span>ИЗМЕРЕНИЕ АКТИВНО</span>
+                <span id="waitingIndicator">🌀 СКОРОСТЬ ВРАЩЕНИЯ</span>
+            </div>
             <div class="speed-display">
                 <span class="speed-value" id="rpmValue">0</span>
                 <span class="speed-unit">об/мин</span>
@@ -382,12 +382,11 @@
         <div id="alerts"></div>
 
         <div class="info-note">
-            🎯 <strong>Как работает радар:</strong><br>
-            📌 Поставьте телефон на устойчивую поверхность (широкий угол обзора)<br>
-            📌 Наведите на движущегося робота с колесами/гусеницами<br>
-            📌 Система автоматически засекает скорость вращения<br>
-            ⚡ Превышение 50 об/мин → моментальное фото + сохранение штрафа<br>
-            💾 Все штрафы сохраняются с фото и точным временем
+            🎯 <strong>Автоматическое измерение:</strong><br>
+            ✅ При обнаружении робота спидометр включается МГНОВЕННО<br>
+            ✅ Телефон должен быть неподвижен для точности<br>
+            ✅ Скорость отображается в реальном времени<br>
+            ⚡ Превышение 50 об/мин → автоматический штраф с фото
         </div>
     </div>
 
@@ -398,7 +397,7 @@
 </div>
 
 <script>
-    // ========== ОПТИМИЗИРОВАННАЯ ВЕРСИЯ С УЛУЧШЕННЫМ ОБЗОРОМ ==========
+    // ========== ИСПРАВЛЕННАЯ ВЕРСИЯ - СПИДОМЕТР ВКЛЮЧАЕТСЯ СРАЗУ ==========
     
     // DOM элементы
     const video = document.getElementById('video');
@@ -411,33 +410,37 @@
     const stabilityFill = document.getElementById('stabilityFill');
     const alertsDiv = document.getElementById('alerts');
     const speedHistoryDiv = document.getElementById('speedHistory');
+    const measuringIndicator = document.getElementById('measuringIndicator');
+    const waitingIndicator = document.getElementById('waitingIndicator');
     
     // Состояние
-    let isPhoneMoving = true;
-    let stability = 0;
+    let isPhoneMoving = false; // По умолчанию считаем неподвижным
+    let stability = 100;
     let robotDetected = false;
     let robotType = null;
     let currentRPM = 0;
     let maxRPM = 0;
     let fines = [];
     let animationId = null;
-    let lastRobotCheck = 0;
     let lastViolation = 0;
     let prevFrame = null;
     let rpmFiltered = 0;
     let speedHistory = [];
+    let measuringActive = false;
+    let frameCounter = 0;
+    let lastMotionValue = 0;
     
     // ========== ШТРАФЫ С ФОТО ==========
     function loadFines() {
         try {
-            const saved = localStorage.getItem('robot_fines_v4');
+            const saved = localStorage.getItem('robot_fines_v5');
             if (saved) fines = JSON.parse(saved);
         } catch(e) { fines = []; }
         renderFines();
     }
     
     function saveFines() {
-        localStorage.setItem('robot_fines_v4', JSON.stringify(fines.slice(0, 30)));
+        localStorage.setItem('robot_fines_v5', JSON.stringify(fines.slice(0, 30)));
     }
     
     function capturePhoto() {
@@ -453,16 +456,16 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Добавляем водяной знак с данными
-            ctx.font = 'bold 16px monospace';
+            // Добавляем водяной знак
+            ctx.font = 'bold 14px monospace';
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
             ctx.fillStyle = '#facc15';
-            ctx.font = 'bold 14px monospace';
+            ctx.font = 'bold 13px monospace';
             const now = new Date();
             const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
             const dateStr = now.toLocaleDateString('ru-RU');
-            ctx.fillText(`🚨 НАРУШЕНИЕ | ${dateStr} ${timeStr} | ${currentRPM.toFixed(1)} об/мин`, 10, canvas.height - 12);
+            ctx.fillText(`🚨 ПРЕВЫШЕНИЕ | ${dateStr} ${timeStr} | ${currentRPM.toFixed(1)} об/мин`, 10, canvas.height - 12);
             
             resolve(canvas.toDataURL('image/jpeg', 0.85));
         });
@@ -488,9 +491,8 @@
         saveFines();
         renderFines();
         
-        showAlert('danger', `⚠️ ШТРАФ! ${rpm.toFixed(1)} об/мин - превышение скорости зафиксировано с фото`, 3000);
+        showAlert('danger', `⚠️ ШТРАФ! ${rpm.toFixed(1)} об/мин - превышение зафиксировано`, 3000);
         
-        // Виброотклик если поддерживается
         if (navigator.vibrate) navigator.vibrate(200);
         
         return true;
@@ -507,7 +509,7 @@
         
         container.innerHTML = fines.map(f => `
             <div class="fine-card">
-                <img class="fine-photo" src="${f.photo}" alt="Нарушение скорости">
+                <img class="fine-photo" src="${f.photo}" alt="Нарушение">
                 <div class="fine-info">
                     <span class="fine-datetime">🕒 ${f.time}</span>
                     <span class="fine-rpm">${f.type === 'wheels' ? '⚙️' : '🐛'} ${f.rpm} об/мин</span>
@@ -517,7 +519,7 @@
     }
     
     function clearFines() {
-        if (confirm('🗑 Удалить все штрафы? Это действие нельзя отменить.')) {
+        if (confirm('🗑 Удалить все штрафы?')) {
             fines = [];
             saveFines();
             renderFines();
@@ -539,7 +541,7 @@
         }
     }
     
-    // ========== ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА (АКСЕЛЕРОМЕТР) ==========
+    // ========== ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА ==========
     let motionBuffer = [];
     
     function handleMotion(event) {
@@ -555,9 +557,8 @@
         const avgDev = motionBuffer.reduce((a,b) => a+b, 0) / motionBuffer.length;
         stability = Math.max(0, Math.min(100, 100 - avgDev * 8));
         
-        isPhoneMoving = stability < 55;
+        isPhoneMoving = stability < 50;
         
-        // Обновляем UI
         if (isPhoneMoving) {
             phoneStatusSpan.innerHTML = '⚠️ ДВИЖЕТСЯ';
             phoneStatusSpan.className = 'status-value status-inactive';
@@ -593,74 +594,59 @@
         }
     }
     
-    // ========== РАСПОЗНАВАНИЕ РОБОТА (БЫСТРОЕ И ТОЧНОЕ) ==========
-    function detectRobotFast(imageData, w, h) {
+    // ========== РАСПОЗНАВАНИЕ РОБОТА ==========
+    function detectRobot(imageData, w, h) {
         const data = imageData.data;
         let edges = 0;
         let darkSpots = 0;
         
-        // Поиск границ и контрастных областей
         for (let y = 5; y < h - 5; y += 5) {
             for (let x = 5; x < w - 5; x += 5) {
                 const idx = (y * w + x) * 4;
                 const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-                const idxR = (y * w + x + 3) * 4;
+                const idxR = (y * w + x + 4) * 4;
                 const brightR = (data[idxR] + data[idxR+1] + data[idxR+2]) / 3;
-                const idxD = ((y + 3) * w + x) * 4;
+                const idxD = ((y + 4) * w + x) * 4;
                 const brightD = (data[idxD] + data[idxD+1] + data[idxD+2]) / 3;
                 
-                if (Math.abs(bright - brightR) > 35) edges++;
-                if (Math.abs(bright - brightD) > 35) edges++;
-                
-                if (bright < 60) darkSpots++;
+                if (Math.abs(bright - brightR) > 40) edges++;
+                if (Math.abs(bright - brightD) > 40) edges++;
+                if (bright < 70) darkSpots++;
             }
         }
         
-        if (edges < 20 && darkSpots < 50) return { detected: false, type: null };
+        if (edges < 20) return { detected: false, type: null };
         
-        // Определение типа по форме
-        let circularScore = 0;
-        for (let y = 15; y < h - 15; y += 10) {
-            for (let x = 15; x < w - 15; x += 10) {
+        // Определяем тип
+        let circleScore = 0;
+        for (let y = 15; y < h - 15; y += 12) {
+            for (let x = 15; x < w - 15; x += 12) {
                 let circle = 0;
-                for (let r = 6; r <= 18; r += 4) {
-                    for (let a = 0; a < 360; a += 60) {
+                for (let r = 8; r <= 20; r += 6) {
+                    for (let a = 0; a < 360; a += 45) {
                         const rad = a * Math.PI / 180;
                         const px = x + r * Math.cos(rad);
                         const py = y + r * Math.sin(rad);
                         if (px >= 0 && px < w && py >= 0 && py < h) {
                             const idx = (Math.floor(py) * w + Math.floor(px)) * 4;
                             const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-                            if (bright < 100) circle++;
+                            if (bright < 90) circle++;
                         }
                     }
                 }
-                if (circle > 18) circularScore++;
+                if (circle > 20) circleScore++;
             }
         }
         
-        if (circularScore > 2) return { detected: true, type: 'wheels' };
-        if (edges > 50 && darkSpots > 80) return { detected: true, type: 'tracks' };
-        if (edges > 40) return { detected: true, type: 'wheels' };
+        if (circleScore > 2) return { detected: true, type: 'wheels' };
+        if (edges > 50) return { detected: true, type: 'tracks' };
+        if (edges > 35) return { detected: true, type: 'wheels' };
         
         return { detected: false, type: null };
     }
     
     // ========== АНАЛИЗ ДВИЖЕНИЯ ДЛЯ СПИДОМЕТРА ==========
-    function analyzeMotionFast(currentFrame, w, h) {
-        if (!prevFrame) return 0;
-        
-        let diff = 0;
-        let count = 0;
-        // Анализируем каждый 6-й пиксель для скорости
-        for (let i = 0; i < w * h; i += 6) {
-            diff += Math.abs(prevFrame[i] - currentFrame[i]);
-            count++;
-        }
-        return diff / count;
-    }
-    
-    function getGrayFrameFast(w, h) {
+    function getGrayFrame(w, h) {
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
@@ -675,6 +661,17 @@
         return gray;
     }
     
+    function computeMotion(prev, curr) {
+        if (!prev || !curr) return 0;
+        let diff = 0;
+        let count = 0;
+        for (let i = 0; i < prev.length; i += 5) {
+            diff += Math.abs(prev[i] - curr[i]);
+            count++;
+        }
+        return diff / count;
+    }
+    
     function drawOverlay() {
         const ctx = overlayCanvas.getContext('2d');
         if (!video.videoWidth) return;
@@ -683,40 +680,31 @@
         overlayCanvas.height = video.videoHeight;
         ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         
-        const isActive = (!isPhoneMoving && robotDetected);
-        
         if (robotDetected) {
-            // Зеленая рамка при активном измерении
-            ctx.strokeStyle = isActive ? '#10b981' : '#f59e0b';
+            const isMeasuring = (!isPhoneMoving && robotDetected);
+            ctx.strokeStyle = isMeasuring ? '#10b981' : '#f59e0b';
             ctx.lineWidth = 4;
             ctx.strokeRect(8, 8, overlayCanvas.width - 16, overlayCanvas.height - 16);
             
-            // Угловые маркеры
-            ctx.fillStyle = isActive ? '#10b981' : '#f59e0b';
-            ctx.fillRect(8, 8, 20, 4);
-            ctx.fillRect(8, 8, 4, 20);
-            ctx.fillRect(overlayCanvas.width - 28, 8, 20, 4);
-            ctx.fillRect(overlayCanvas.width - 12, 8, 4, 20);
-            ctx.fillRect(8, overlayCanvas.height - 12, 20, 4);
-            ctx.fillRect(8, overlayCanvas.height - 28, 4, 20);
-            ctx.fillRect(overlayCanvas.width - 28, overlayCanvas.height - 12, 20, 4);
-            ctx.fillRect(overlayCanvas.width - 12, overlayCanvas.height - 28, 4, 20);
-            
             ctx.font = 'bold 14px system-ui';
-            ctx.fillStyle = isActive ? '#10b981' : '#f59e0b';
+            ctx.fillStyle = isMeasuring ? '#10b981' : '#f59e0b';
             const label = robotType === 'wheels' ? '⚙️ РОБОТ С КОЛЁСАМИ' : '🐛 РОБОТ НА ГУСЕНИЦАХ';
             ctx.fillText(label, 20, 40);
             
-            if (isActive) {
+            if (isMeasuring) {
                 ctx.font = 'bold 12px monospace';
                 ctx.fillStyle = '#facc15';
                 ctx.fillText(`Скорость: ${currentRPM.toFixed(0)} об/мин`, 20, 70);
+            } else if (isPhoneMoving) {
+                ctx.font = 'bold 12px monospace';
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillText('⚠️ Телефон не стабилен', 20, 70);
             }
         }
     }
     
-    // ========== ОСНОВНОЙ ЦИКЛ (ОПТИМИЗИРОВАННЫЙ) ==========
-    let frameCount = 0;
+    // ========== ОСНОВНОЙ ЦИКЛ ==========
+    let lastRobotCheck = 0;
     let lastSpeedUpdate = 0;
     
     async function mainLoop() {
@@ -725,11 +713,11 @@
             return;
         }
         
-        frameCount++;
+        frameCounter++;
         
-        // Распознавание робота (каждые 10 кадров)
-        if (frameCount % 10 === 0) {
-            const w = Math.min(140, video.videoWidth);
+        // Распознавание робота (каждые 8 кадров)
+        if (frameCounter % 8 === 0) {
+            const w = Math.min(120, video.videoWidth);
             const h = Math.floor(w * video.videoHeight / video.videoWidth);
             const canvas = document.createElement('canvas');
             canvas.width = w;
@@ -738,45 +726,78 @@
             ctx.drawImage(video, 0, 0, w, h);
             const imgData = ctx.getImageData(0, 0, w, h);
             
-            const detection = detectRobotFast(imgData, w, h);
+            const detection = detectRobot(imgData, w, h);
+            const wasDetected = robotDetected;
             robotDetected = detection.detected;
             robotType = detection.type;
             
+            // Обновляем UI робота
             if (robotDetected) {
                 robotStatusSpan.innerHTML = robotType === 'wheels' ? '⚙️ С КОЛЁСАМИ' : '🐛 НА ГУСЕНИЦАХ';
                 robotStatusSpan.className = 'status-value status-active';
                 robotIconSpan.innerHTML = robotType === 'wheels' ? '⚙️' : '🐛';
+                
+                // Включаем измерение сразу при обнаружении робота!
+                if (!wasDetected) {
+                    showAlert('success', '🤖 Робот обнаружен! Измерение скорости начато', 2000);
+                    measuringActive = true;
+                    waitingIndicator.style.display = 'none';
+                    measuringIndicator.style.display = 'inline-block';
+                }
             } else {
                 robotStatusSpan.innerHTML = '❌ НЕ НАЙДЕН';
                 robotStatusSpan.className = 'status-value status-inactive';
                 robotIconSpan.innerHTML = '🤖❌';
+                measuringActive = false;
+                waitingIndicator.style.display = 'inline-block';
+                measuringIndicator.style.display = 'none';
+                // Сбрасываем скорость если робот пропал
+                if (currentRPM !== 0) {
+                    currentRPM = 0;
+                    rpmFiltered = 0;
+                    rpmSpan.textContent = '0';
+                    maxRPM = 0;
+                    speedHistory = [];
+                    speedHistoryDiv.innerHTML = '';
+                }
             }
             
             drawOverlay();
         }
         
-        // Измерение скорости (только если телефон стабилен и робот обнаружен)
-        const isActive = (!isPhoneMoving && robotDetected);
+        // ИЗМЕРЕНИЕ СКОРОСТИ - ВКЛЮЧАЕТСЯ СРАЗУ ПРИ ОБНАРУЖЕНИИ РОБОТА
+        // НЕ ТРЕБУЕТСЯ СТАБИЛЬНОСТЬ ДЛЯ ВКЛЮЧЕНИЯ, НО ДЛЯ ТОЧНОСТИ НУЖНА
+        const canMeasure = robotDetected; // Измеряем всегда, когда есть робот!
         
-        if (isActive && frameCount % 2 === 0) {
+        if (canMeasure && frameCounter % 2 === 0) {
             const w = Math.min(100, video.videoWidth);
             const h = Math.floor(w * video.videoHeight / video.videoWidth);
-            const gray = getGrayFrameFast(w, h);
+            const gray = getGrayFrame(w, h);
             
-            const motion = analyzeMotionFast(gray, w, h);
-            let rawRPM = motion * 7.2;
-            rpmFiltered = rpmFiltered * 0.65 + rawRPM * 0.35;
+            const motion = computeMotion(prevFrame, gray);
+            
+            // Если телефон стабилен - точные измерения, если движется - все равно измеряем но с предупреждением
+            let rawRPM = motion * 8.5;
+            if (rawRPM < 0) rawRPM = 0;
+            
+            // Фильтрация для плавности
+            rpmFiltered = rpmFiltered * 0.6 + rawRPM * 0.4;
             currentRPM = Math.min(150, Math.max(0, rpmFiltered));
             rpmSpan.textContent = Math.floor(currentRPM);
             
-            // Обновляем историю скорости
+            // Обновляем историю
             speedHistory.push(currentRPM);
             if (speedHistory.length > 10) speedHistory.shift();
             const avgSpeed = speedHistory.reduce((a,b) => a+b, 0) / speedHistory.length;
             
-            // Показываем максимальную скорость
             if (currentRPM > maxRPM) maxRPM = currentRPM;
-            speedHistoryDiv.innerHTML = `📊 Текущая: ${currentRPM.toFixed(0)} | Пик: ${maxRPM.toFixed(0)} об/мин`;
+            
+            // Показываем статус измерения
+            if (isPhoneMoving) {
+                speedHistoryDiv.innerHTML = `📊 ${currentRPM.toFixed(0)} об/мин | Пик: ${maxRPM.toFixed(0)} | ⚠️ телефон движется`;
+            } else {
+                speedHistoryDiv.innerHTML = `📊 ${currentRPM.toFixed(0)} об/мин | Пик: ${maxRPM.toFixed(0)} об/мин`;
+            }
             
             // Проверка превышения
             const now = Date.now();
@@ -786,65 +807,45 @@
             }
             
             prevFrame = gray;
-        } else if (!isActive) {
-            if (currentRPM !== 0) {
-                currentRPM = 0;
-                rpmFiltered = 0;
-                rpmSpan.textContent = '0';
-                maxRPM = 0;
-                speedHistory = [];
-                speedHistoryDiv.innerHTML = '';
-            }
+        } else if (!robotDetected) {
             prevFrame = null;
         }
         
-        // Уведомления о состоянии
-        if (frameCount % 60 === 0) {
-            if (isActive) {
-                if (!alertsDiv.innerHTML.includes('АКТИВНА')) {
-                    showAlert('success', '✅ РАДАР АКТИВЕН! Скорость измеряется', 2000);
+        // Показываем предупреждение о стабильности если нужно
+        if (frameCounter % 60 === 0) {
+            if (robotDetected && isPhoneMoving && currentRPM > 0) {
+                showAlert('warning', '📱 Для точности измерений поставьте телефон на устойчивую поверхность', 2000);
+            } else if (robotDetected && !isPhoneMoving && currentRPM > 0) {
+                if (!alertsDiv.innerHTML.includes('ИЗМЕРЕНИЕ')) {
+                    showAlert('success', `✅ Измерение скорости: ${currentRPM.toFixed(0)} об/мин`, 1500);
                 }
-            } else if (isPhoneMoving) {
-                showAlert('warning', '📱 Поставьте телефон на устойчивую поверхность', 2000);
-            } else if (!robotDetected) {
-                showAlert('warning', '🤖 Наведите камеру на робота с колесами/гусеницами', 2000);
             }
         }
         
         animationId = requestAnimationFrame(mainLoop);
     }
     
-    // ========== КАМЕРА С УЛУЧШЕННЫМ ОБЗОРОМ ==========
+    // ========== КАМЕРА ==========
     async function initCamera() {
         try {
-            // Запрашиваем широкий угол обзора
             const constraints = {
                 video: {
                     facingMode: { exact: "environment" },
                     width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                    aspectRatio: { ideal: 1.7777777778 }
+                    height: { ideal: 1080 }
                 }
             };
             
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
             await video.play();
-            
-            // Устанавливаем стиль для максимального обзора
-            video.style.objectFit = 'contain';
-            video.style.width = '100%';
-            video.style.height = 'auto';
-            
-            showAlert('success', '✅ Камера готова. Широкий угол обзора активирован', 2000);
+            showAlert('success', '✅ Камера готова. Наведите на робота', 2000);
         } catch (err) {
-            console.error(err);
-            // Fallback на стандартную камеру
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
                 await video.play();
-                showAlert('info', '📷 Камера работает (стандартный режим)', 2000);
+                showAlert('info', '📷 Камера работает', 2000);
             } catch(e) {
                 showAlert('danger', '❌ Нет доступа к камере', 3000);
             }
@@ -854,7 +855,6 @@
     // ========== ЗАПУСК ==========
     document.getElementById('clearFinesBtn').addEventListener('click', clearFines);
     
-    // Переключение вкладок
     document.querySelectorAll('.tab-button').forEach(btn => {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
@@ -870,7 +870,6 @@
     initCamera();
     mainLoop();
     
-    // Очистка при закрытии
     window.addEventListener('beforeunload', () => {
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(t => t.stop());
