@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Робот-Фиксатор скорости вращения | Профессиональная система</title>
-    <meta name="description" content="Интеллектуальная система фиксации превышения скорости вращения роботов">
+    <title>Робот-Фиксатор скорости | Быстрая система</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0f1e;
             color: #eef2ff;
             height: 100vh;
             display: flex;
@@ -26,92 +24,61 @@
 
         /* Вкладки */
         .tab-bar {
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(31, 42, 62, 0.5);
-            padding: 8px 16px 0 16px;
+            background: #111827;
+            border-bottom: 1px solid #1f2a3e;
+            padding: 8px 16px 0;
             display: flex;
             gap: 24px;
             flex-shrink: 0;
-            position: relative;
-            z-index: 10;
         }
 
         .tab-button {
             background: none;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            padding: 12px 0 10px 0;
+            padding: 12px 0 10px;
             color: #9ca3af;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
             flex: 1;
             text-align: center;
-            letter-spacing: 0.5px;
+            transition: all 0.2s;
         }
 
         .tab-button.active {
             color: #60a5fa;
-        }
-
-        .tab-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #60a5fa, #3b82f6);
-            border-radius: 3px 3px 0 0;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: scaleX(0); }
-            to { transform: scaleX(1); }
+            border-bottom: 2px solid #60a5fa;
         }
 
         .tab-content {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
-            scroll-behavior: smooth;
         }
 
         .tab-pane {
             display: none;
-            animation: fadeIn 0.3s ease;
         }
 
         .tab-pane.active-pane {
             display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Контейнер камеры */
+        /* Камера */
         .camera-container {
             background: #000;
-            border-radius: 28px;
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 4/3;
             width: 100%;
-            margin-bottom: 20px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.5);
-            border: 1px solid rgba(96, 165, 250, 0.2);
+            margin-bottom: 16px;
         }
 
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
 
         .overlay-canvas {
@@ -124,15 +91,6 @@
         }
 
         /* Панель статуса */
-        .status-panel {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 18px 20px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(96, 165, 250, 0.2);
-        }
-
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -141,17 +99,16 @@
         }
 
         .status-card {
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 20px;
+            background: #1e293b;
+            border-radius: 16px;
             padding: 12px;
             text-align: center;
-            transition: all 0.3s ease;
         }
 
         .status-icon {
-            font-size: 2rem;
+            font-size: 1.8rem;
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .status-label {
@@ -162,52 +119,33 @@
 
         .status-value {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        .status-active {
-            color: #10b981;
-        }
-
-        .status-inactive {
-            color: #ef4444;
-        }
-
-        .status-warning {
-            color: #f59e0b;
-        }
+        .status-active { color: #10b981; }
+        .status-inactive { color: #ef4444; }
+        .status-warning { color: #f59e0b; }
 
         /* Скорость */
         .speed-section {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+            background: #1e293b;
             border-radius: 20px;
             padding: 16px;
             text-align: center;
-            margin-top: 8px;
+            margin-bottom: 16px;
         }
 
         .speed-title {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #94a3b8;
             margin-bottom: 8px;
-        }
-
-        .speed-display {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 8px;
         }
 
         .speed-value {
             font-size: 3rem;
             font-weight: 800;
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #facc15, #f59e0b);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 20px rgba(250, 204, 21, 0.3);
+            font-family: monospace;
+            color: #facc15;
         }
 
         .speed-unit {
@@ -215,171 +153,110 @@
             color: #94a3b8;
         }
 
-        /* Индикатор стабильности */
         .stability-bar {
             margin-top: 12px;
             height: 4px;
-            background: rgba(51, 65, 85, 0.5);
+            background: #334155;
             border-radius: 2px;
             overflow: hidden;
         }
 
         .stability-fill {
             height: 100%;
-            transition: width 0.1s linear, background 0.3s ease;
             width: 0%;
+            transition: width 0.05s linear;
             border-radius: 2px;
         }
 
         /* Уведомления */
         .alert {
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85rem;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
             text-align: center;
-            margin-bottom: 12px;
-            animation: slideDown 0.3s ease;
-            backdrop-filter: blur(10px);
+            margin-bottom: 8px;
+            animation: fadeIn 0.2s;
         }
 
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .alert-success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .alert-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .alert-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .alert-info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .alert-success {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.5);
-            color: #10b981;
-        }
-
-        .alert-warning {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.5);
-            color: #f59e0b;
-        }
-
-        .alert-danger {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            color: #ef4444;
-            animation: pulse 1s infinite;
-        }
-
-        .alert-info {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.5);
-            color: #60a5fa;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* Список штрафов */
+        /* Штрафы */
         .fines-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            padding-bottom: 20px;
+            gap: 12px;
         }
 
         .fine-card {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: #1e293b;
+            border-radius: 16px;
             overflow: hidden;
-            transition: transform 0.2s ease;
-            border: 1px solid rgba(96, 165, 250, 0.2);
-        }
-
-        .fine-card:active {
-            transform: scale(0.98);
         }
 
         .fine-photo {
             width: 100%;
-            max-height: 200px;
+            max-height: 180px;
             object-fit: cover;
-            background: #0f172a;
         }
 
         .fine-info {
-            padding: 12px 16px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            border-top: 1px solid rgba(51, 65, 85, 0.5);
+            font-size: 0.8rem;
         }
 
         .fine-datetime {
             font-family: monospace;
-            font-size: 0.85rem;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 4px 12px;
+            background: #0f172a;
+            padding: 4px 10px;
             border-radius: 20px;
         }
 
         .fine-rpm {
-            background: rgba(220, 38, 38, 0.3);
-            padding: 4px 12px;
+            background: #dc2626;
+            padding: 4px 10px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.85rem;
         }
 
         .empty-fines {
             text-align: center;
-            padding: 48px 20px;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 24px;
+            padding: 40px;
+            background: #1e293b;
+            border-radius: 20px;
             color: #94a3b8;
         }
 
         .clear-btn {
-            background: rgba(51, 65, 85, 0.8);
+            background: #334155;
             border: none;
-            padding: 12px 20px;
+            padding: 12px;
             border-radius: 40px;
             color: white;
             font-weight: 600;
             margin-top: 16px;
             width: 100%;
-            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .clear-btn:active {
-            transform: scale(0.97);
-            background: rgba(71, 85, 105, 0.9);
         }
 
         .info-note {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 16px;
-            padding: 12px;
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 10px;
             font-size: 0.7rem;
             text-align: center;
             color: #94a3b8;
-            margin-top: 12px;
-        }
-
-        @media (max-width: 500px) {
-            .speed-value { font-size: 2.5rem; }
-            .status-grid { gap: 8px; }
-            .status-card { padding: 8px; }
         }
     </style>
 </head>
@@ -397,382 +274,280 @@
             <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
         </div>
 
-        <div class="status-panel">
-            <div class="status-grid">
-                <div class="status-card">
-                    <span class="status-icon" id="phoneIcon">📱</span>
-                    <div class="status-label">Положение телефона</div>
-                    <div class="status-value" id="phoneStatus">Анализ...</div>
-                </div>
-                <div class="status-card">
-                    <span class="status-icon" id="robotIconStatus">🤖</span>
-                    <div class="status-label">Обнаружение робота</div>
-                    <div class="status-value" id="robotStatus">Поиск...</div>
-                </div>
+        <div class="status-grid">
+            <div class="status-card">
+                <span class="status-icon" id="phoneIcon">📱</span>
+                <div class="status-label">Телефон</div>
+                <div class="status-value" id="phoneStatus">Анализ...</div>
             </div>
-            
-            <div class="speed-section">
-                <div class="speed-title">🌀 СКОРОСТЬ ВРАЩЕНИЯ</div>
-                <div class="speed-display">
-                    <span class="speed-value" id="rpmValue">0.0</span>
-                    <span class="speed-unit">об/мин</span>
-                </div>
-                <div class="stability-bar">
-                    <div class="stability-fill" id="stabilityFill"></div>
-                </div>
+            <div class="status-card">
+                <span class="status-icon" id="robotIcon">🤖</span>
+                <div class="status-label">Робот</div>
+                <div class="status-value" id="robotStatus">Поиск...</div>
             </div>
         </div>
 
-        <div id="alertsContainer"></div>
+        <div class="speed-section">
+            <div class="speed-title">🌀 СКОРОСТЬ ВРАЩЕНИЯ</div>
+            <div><span class="speed-value" id="rpmValue">0</span><span class="speed-unit"> об/мин</span></div>
+            <div class="stability-bar">
+                <div class="stability-fill" id="stabilityFill"></div>
+            </div>
+        </div>
+
+        <div id="alerts"></div>
 
         <div class="info-note">
-            🎯 <strong>Как это работает</strong><br>
-            📌 Поставьте телефон на устойчивую поверхность<br>
-            📌 Наведите камеру на робота с колёсами или гусеницами<br>
-            📌 Система автоматически активируется и начнёт измерение<br>
-            ⚡ При превышении 50 об/мин → автофиксация нарушения
+            📌 Поставьте телефон на стол → наведите на робота → автоматическое измерение скорости<br>
+            ⚡ Превышение 50 об/мин → фото + штраф
         </div>
     </div>
 
     <div id="fines-pane" class="tab-pane">
-        <div id="finesListContainer" class="fines-list">
-            <div class="empty-fines">📭 Нет зафиксированных нарушений</div>
-        </div>
-        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
+        <div id="finesList"></div>
+        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю</button>
     </div>
 </div>
 
 <script>
-    // ========== УПРАВЛЕНИЕ ВКЛАДКАМИ ==========
-    const tabBtns = document.querySelectorAll('.tab-button');
+    // ========== УПРОЩЕННАЯ ОПТИМИЗИРОВАННАЯ ВЕРСИЯ ==========
     
-    function switchTab(tabId) {
-        tabBtns.forEach(btn => {
-            const target = btn.getAttribute('data-tab');
-            btn.classList.toggle('active', target === tabId);
-        });
-        document.getElementById('camera-pane').classList.toggle('active-pane', tabId === 'camera');
-        document.getElementById('fines-pane').classList.toggle('active-pane', tabId === 'fines');
-    }
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
-    });
-
-    // ========== ХРАНИЛИЩЕ ШТРАФОВ ==========
-    let finesArray = [];
-
+    // DOM элементы
+    const video = document.getElementById('video');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const rpmSpan = document.getElementById('rpmValue');
+    const phoneStatusSpan = document.getElementById('phoneStatus');
+    const robotStatusSpan = document.getElementById('robotStatus');
+    const phoneIconSpan = document.getElementById('phoneIcon');
+    const robotIconSpan = document.getElementById('robotIcon');
+    const stabilityFill = document.getElementById('stabilityFill');
+    const alertsDiv = document.getElementById('alerts');
+    
+    // Состояние
+    let isPhoneMoving = true;
+    let stability = 0;
+    let robotDetected = false;
+    let robotType = null;
+    let currentRPM = 0;
+    let fines = [];
+    let animationId = null;
+    let lastRobotCheck = 0;
+    let lastMotionTime = 0;
+    let lastViolation = 0;
+    let prevFrame = null;
+    let rpmFiltered = 0;
+    
+    // ========== ШТРАФЫ ==========
     function loadFines() {
-        const stored = localStorage.getItem('robot_speed_fines_final');
-        if (stored) {
-            try {
-                finesArray = JSON.parse(stored);
-            } catch(e) { finesArray = []; }
-        }
+        try {
+            const saved = localStorage.getItem('robot_fines');
+            if (saved) fines = JSON.parse(saved);
+        } catch(e) { fines = []; }
         renderFines();
     }
-
+    
     function saveFines() {
-        localStorage.setItem('robot_speed_fines_final', JSON.stringify(finesArray.slice(0, 30)));
+        localStorage.setItem('robot_fines', JSON.stringify(fines.slice(0, 30)));
     }
-
-    function addFine(videoElement, rpm, robotType) {
+    
+    function addFine(rpm, type) {
         const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0);
-        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        
+        if (video.videoWidth) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+        const imgData = canvas.toDataURL('image/jpeg', 0.7);
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ru-RU');
         const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
+        const dateStr = now.toLocaleDateString('ru-RU');
         
-        finesArray.unshift({
-            imageDataUrl,
-            timestamp: now.toISOString(),
-            formattedTime: `${dateStr} ${timeStr}`,
+        fines.unshift({
+            img: imgData,
+            time: `${dateStr} ${timeStr}`,
             rpm: rpm.toFixed(1),
-            robotType
+            type: type
         });
-        
-        if (finesArray.length > 30) finesArray.pop();
+        if (fines.length > 30) fines.pop();
         saveFines();
         renderFines();
-        return true;
+        showAlert('danger', `⚠️ ШТРАФ! ${rpm.toFixed(1)} об/мин - превышение скорости`, 2500);
     }
-
+    
     function renderFines() {
-        const container = document.getElementById('finesListContainer');
+        const container = document.getElementById('finesList');
         if (!container) return;
         
-        if (finesArray.length === 0) {
-            container.innerHTML = '<div class="empty-fines">📭 Нет зафиксированных нарушений</div>';
+        if (fines.length === 0) {
+            container.innerHTML = '<div class="empty-fines">📭 Нет нарушений</div>';
             return;
         }
         
-        container.innerHTML = finesArray.map(fine => `
+        container.innerHTML = fines.map(f => `
             <div class="fine-card">
-                <img class="fine-photo" src="${fine.imageDataUrl}" alt="Нарушение">
+                <img class="fine-photo" src="${f.img}" alt="нарушение">
                 <div class="fine-info">
-                    <span class="fine-datetime">🕒 ${fine.formattedTime}</span>
-                    <span class="fine-rpm">${fine.robotType === 'wheels' ? '⚙️' : '🐛'} ${fine.rpm} об/мин</span>
+                    <span class="fine-datetime">🕒 ${f.time}</span>
+                    <span class="fine-rpm">${f.type === 'wheels' ? '⚙️' : '🐛'} ${f.rpm} об/мин</span>
                 </div>
             </div>
         `).join('');
     }
-
+    
     function clearFines() {
         if (confirm('Удалить все штрафы?')) {
-            finesArray = [];
+            fines = [];
             saveFines();
             renderFines();
         }
     }
-
-    // ========== ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА ==========
-    let isPhoneMoving = true;
-    let stability = 50;
-    let motionHistory = [];
     
-    function initMotionDetection() {
+    // ========== УВЕДОМЛЕНИЯ ==========
+    let alertTimeout = null;
+    function showAlert(type, message, duration = 2000) {
+        alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        if (alertTimeout) clearTimeout(alertTimeout);
+        if (duration > 0) {
+            alertTimeout = setTimeout(() => {
+                alertsDiv.innerHTML = '';
+            }, duration);
+        }
+    }
+    
+    // ========== ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА ==========
+    let motionBuffer = [];
+    
+    function handleMotion(event) {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+        
+        const mag = Math.abs((acc.x || 0)) + Math.abs((acc.y || 0)) + Math.abs((acc.z || 0));
+        const deviation = Math.abs(mag - 9.8);
+        
+        motionBuffer.push(deviation);
+        if (motionBuffer.length > 10) motionBuffer.shift();
+        
+        const avgDev = motionBuffer.reduce((a,b) => a+b, 0) / motionBuffer.length;
+        stability = Math.max(0, Math.min(100, 100 - avgDev * 10));
+        
+        isPhoneMoving = stability < 60;
+        
+        // Обновляем UI
+        if (isPhoneMoving) {
+            phoneStatusSpan.innerHTML = '⚠️ ДВИЖЕТСЯ';
+            phoneStatusSpan.className = 'status-value status-inactive';
+            phoneIconSpan.innerHTML = '📱⚠️';
+        } else {
+            phoneStatusSpan.innerHTML = '✅ СТАБИЛЕН';
+            phoneStatusSpan.className = 'status-value status-active';
+            phoneIconSpan.innerHTML = '📱✅';
+        }
+        
+        stabilityFill.style.width = stability + '%';
+        if (stability > 70) stabilityFill.style.background = '#10b981';
+        else if (stability > 40) stabilityFill.style.background = '#f59e0b';
+        else stabilityFill.style.background = '#ef4444';
+    }
+    
+    // Инициализация акселерометра
+    function initMotion() {
         if (!window.DeviceMotionEvent) {
             isPhoneMoving = false;
-            updatePhoneUI();
+            stability = 100;
+            phoneStatusSpan.innerHTML = '✅ СТАБИЛЕН';
             return;
         }
         
-        const handleMotion = (event) => {
-            const acc = event.accelerationIncludingGravity;
-            if (!acc) return;
-            
-            const magnitude = Math.sqrt(
-                (acc.x || 0) ** 2 + 
-                (acc.y || 0) ** 2 + 
-                (acc.z || 0) ** 2
-            );
-            
-            const deviation = Math.abs(magnitude - 9.8);
-            motionHistory.push(deviation);
-            if (motionHistory.length > 15) motionHistory.shift();
-            
-            const avgDeviation = motionHistory.reduce((a, b) => a + b, 0) / motionHistory.length;
-            stability = Math.max(0, Math.min(100, 100 - avgDeviation * 12));
-            
-            isPhoneMoving = stability < 65;
-            updatePhoneUI();
-            updateStabilityBar();
-        };
-        
         if (typeof DeviceMotionEvent.requestPermission === 'function') {
             document.body.addEventListener('click', () => {
-                DeviceMotionEvent.requestPermission()
-                    .then(permission => {
-                        if (permission === 'granted') {
-                            window.addEventListener('devicemotion', handleMotion);
-                        }
-                    })
-                    .catch(console.error);
+                DeviceMotionEvent.requestPermission().then(p => {
+                    if (p === 'granted') window.addEventListener('devicemotion', handleMotion);
+                }).catch(console.log);
             }, { once: true });
         } else {
             window.addEventListener('devicemotion', handleMotion);
         }
     }
     
-    function updatePhoneUI() {
-        const phoneStatus = document.getElementById('phoneStatus');
-        const phoneIcon = document.getElementById('phoneIcon');
-        
-        if (!isPhoneMoving) {
-            phoneStatus.innerHTML = '✅ НЕПОДВИЖЕН';
-            phoneStatus.className = 'status-value status-active';
-            phoneIcon.innerHTML = '📱✅';
-        } else {
-            phoneStatus.innerHTML = '⚠️ ДВИЖЕТСЯ';
-            phoneStatus.className = 'status-value status-inactive';
-            phoneIcon.innerHTML = '📱⚠️';
-        }
-    }
-    
-    function updateStabilityBar() {
-        const fill = document.getElementById('stabilityFill');
-        if (fill) {
-            fill.style.width = stability + '%';
-            if (stability > 70) fill.style.background = '#10b981';
-            else if (stability > 40) fill.style.background = '#f59e0b';
-            else fill.style.background = '#ef4444';
-        }
-    }
-    
-    // ========== РАСПОЗНАВАНИЕ РОБОТА ==========
-    let robotDetected = false;
-    let robotType = null;
-    
-    function detectRobot(imageData, width, height) {
+    // ========== РАСПОЗНАВАНИЕ РОБОТА (УПРОЩЕННОЕ И БЫСТРОЕ) ==========
+    function detectRobotFast(imageData, w, h) {
         const data = imageData.data;
-        let edges = [];
-        
-        // Поиск границ
-        for (let y = 8; y < height - 8; y += 6) {
-            for (let x = 8; x < width - 8; x += 6) {
-                const idx = (y * width + x) * 4;
-                const b = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-                const idxR = (y * width + x + 4) * 4;
-                const bR = (data[idxR] + data[idxR+1] + data[idxR+2]) / 3;
-                const idxD = ((y + 4) * width + x) * 4;
-                const bD = (data[idxD] + data[idxD+1] + data[idxD+2]) / 3;
-                
-                if (Math.abs(b - bR) > 35 || Math.abs(b - bD) > 35) {
-                    edges.push({x, y});
-                }
-            }
-        }
-        
-        if (edges.length < 20) return { detected: false, type: null };
-        
+        let edges = 0;
         let circles = 0;
-        let lines = 0;
         
-        // Поиск кругов (колеса)
-        for (let i = 0; i < Math.min(edges.length, 80); i++) {
-            for (let j = i + 1; j < Math.min(edges.length, i + 40); j++) {
-                const dx = edges[j].x - edges[i].x;
-                const dy = edges[j].y - edges[i].y;
-                const dist = Math.hypot(dx, dy);
-                
-                if (dist > 12 && dist < 70) {
-                    let points = 0;
-                    const cx = edges[i].x + dx/2;
-                    const cy = edges[i].y + dy/2;
-                    const radius = dist / 2;
-                    
-                    for (let k = 0; k < edges.length; k++) {
-                        const d = Math.hypot(edges[k].x - cx, edges[k].y - cy);
-                        if (Math.abs(d - radius) < 6) points++;
+        // Быстрый поиск границ (каждый 6-й пиксель)
+        for (let y = 8; y < h - 8; y += 6) {
+            for (let x = 8; x < w - 8; x += 6) {
+                const idx = (y * w + x) * 4;
+                const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
+                const idxR = (y * w + x + 4) * 4;
+                const brightR = (data[idxR] + data[idxR+1] + data[idxR+2]) / 3;
+                if (Math.abs(bright - brightR) > 40) edges++;
+            }
+        }
+        
+        if (edges < 25) return { detected: false, type: null };
+        
+        // Поиск круговых форм (колеса)
+        for (let y = 20; y < h - 20; y += 12) {
+            for (let x = 20; x < w - 20; x += 12) {
+                let circleScore = 0;
+                for (let r = 8; r <= 20; r += 4) {
+                    for (let a = 0; a < 360; a += 45) {
+                        const rad = a * Math.PI / 180;
+                        const px = x + r * Math.cos(rad);
+                        const py = y + r * Math.sin(rad);
+                        if (px >= 0 && px < w && py >= 0 && py < h) {
+                            const idx = (Math.floor(py) * w + Math.floor(px)) * 4;
+                            const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
+                            if (bright < 80) circleScore++;
+                        }
                     }
-                    if (points > 4) circles++;
                 }
+                if (circleScore > 20) circles++;
             }
         }
         
-        // Поиск линий (гусеницы)
-        for (let i = 0; i < Math.min(edges.length, 60); i++) {
-            let aligned = 1;
-            for (let j = i + 1; j < Math.min(edges.length, i + 12); j++) {
-                const dx = edges[j].x - edges[i].x;
-                const dy = edges[j].y - edges[i].y;
-                if (Math.abs(dx) < 25 && Math.abs(dy) < 25) {
-                    aligned++;
-                }
-            }
-            if (aligned > 5) lines++;
-        }
-        
-        circles = Math.min(circles, 8);
-        lines = Math.min(lines, 8);
-        
-        if (circles > 2) return { detected: true, type: 'wheels' };
-        if (lines > 3) return { detected: true, type: 'tracks' };
-        if (edges.length > 50 && (circles > 0 || lines > 1)) {
-            return { detected: true, type: lines > circles ? 'tracks' : 'wheels' };
-        }
+        if (circles > 3) return { detected: true, type: 'wheels' };
+        if (edges > 60) return { detected: true, type: 'tracks' };
         
         return { detected: false, type: null };
     }
     
-    function updateRobotUI() {
-        const robotStatus = document.getElementById('robotStatus');
-        const robotIcon = document.getElementById('robotIconStatus');
+    // ========== АНАЛИЗ ДВИЖЕНИЯ ==========
+    function analyzeMotionFast(currentFrame, w, h) {
+        if (!prevFrame) return 0;
         
-        if (robotDetected) {
-            robotStatus.innerHTML = robotType === 'wheels' ? '⚙️ С КОЛЁСАМИ' : '🐛 НА ГУСЕНИЦАХ';
-            robotStatus.className = 'status-value status-active';
-            robotIcon.innerHTML = robotType === 'wheels' ? '⚙️' : '🐛';
-        } else {
-            robotStatus.innerHTML = '❌ НЕ ОБНАРУЖЕН';
-            robotStatus.className = 'status-value status-inactive';
-            robotIcon.innerHTML = '🤖❌';
+        let diff = 0;
+        let count = 0;
+        // Анализируем каждый 8-й пиксель для скорости
+        for (let i = 0; i < w * h; i += 8) {
+            diff += Math.abs(prevFrame[i] - currentFrame[i]);
+            count++;
         }
+        return diff / count;
     }
     
-    // ========== ОСНОВНОЙ ЦИКЛ ==========
-    const video = document.getElementById('video');
-    const overlayCanvas = document.getElementById('overlayCanvas');
-    const rpmSpan = document.getElementById('rpmValue');
-    const alertsContainer = document.getElementById('alertsContainer');
-    
-    let previousGray = null;
-    let currentRPM = 0;
-    let filteredRPM = 0;
-    let lastDetectionTime = 0;
-    let lastViolationTime = 0;
-    let violationCooldown = false;
-    let activeAlerts = new Set();
-    
-    function showAlert(type, message, duration = 3000) {
-        const alertId = `${type}_${Date.now()}`;
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.textContent = message;
-        alertDiv.style.animation = 'slideDown 0.3s ease';
-        
-        alertsContainer.appendChild(alertDiv);
-        activeAlerts.add(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.style.opacity = '0';
-            alertDiv.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                alertDiv.remove();
-                activeAlerts.delete(alertDiv);
-            }, 300);
-        }, duration);
-    }
-    
-    function updateAlerts() {
-        const isSystemActive = (!isPhoneMoving && robotDetected);
-        
-        if (isSystemActive) {
-            if (!activeAlerts.has('active')) {
-                showAlert('success', '✅ СИСТЕМА АКТИВНА! Измерение скорости...', 2000);
-            }
-        } else if (isPhoneMoving) {
-            if (!activeAlerts.has('phone')) {
-                showAlert('warning', '📱 ТЕЛЕФОН ДВИЖЕТСЯ! Поставьте на устойчивую поверхность', 0);
-            }
-        } else if (!robotDetected) {
-            if (!activeAlerts.has('robot')) {
-                showAlert('warning', '🤖 РОБОТ НЕ ОБНАРУЖЕН! Наведите камеру на робота', 0);
-            }
-        }
-    }
-    
-    function getGrayFrame(videoEl, width, height) {
+    function getGrayFrameFast(w, h) {
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoEl, 0, 0, width, height);
-        const imgData = ctx.getImageData(0, 0, width, height);
+        ctx.drawImage(video, 0, 0, w, h);
+        const imgData = ctx.getImageData(0, 0, w, h);
         const data = imgData.data;
-        const gray = new Uint8ClampedArray(width * height);
-        for (let i = 0; i < width * height; i++) {
+        const gray = new Uint8ClampedArray(w * h);
+        for (let i = 0; i < w * h; i++) {
             gray[i] = (data[i*4] + data[i*4+1] + data[i*4+2]) / 3;
         }
         return gray;
     }
     
-    function computeMotion(prev, curr) {
-        if (!prev || !curr) return 0;
-        let diff = 0;
-        for (let i = 0; i < prev.length; i += 4) {
-            diff += Math.abs(prev[i] - curr[i]);
-        }
-        return diff / (prev.length / 4);
-    }
-    
     function drawOverlay() {
         const ctx = overlayCanvas.getContext('2d');
+        if (!video.videoWidth) return;
+        
         overlayCanvas.width = video.videoWidth;
         overlayCanvas.height = video.videoHeight;
         ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
@@ -782,124 +557,143 @@
         if (robotDetected) {
             ctx.strokeStyle = isActive ? '#10b981' : '#f59e0b';
             ctx.lineWidth = 3;
-            ctx.setLineDash([10, 5]);
             ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
-            ctx.setLineDash([]);
-            ctx.font = 'bold 14px system-ui';
+            ctx.font = 'bold 12px system-ui';
             ctx.fillStyle = isActive ? '#10b981' : '#f59e0b';
-            const label = robotType === 'wheels' ? '⚙️ РОБОТ С КОЛЁСАМИ' : '🐛 РОБОТ НА ГУСЕНИЦАХ';
+            const label = robotType === 'wheels' ? '⚙️ РОБОТ' : '🐛 РОБОТ';
             ctx.fillText(label, 20, 35);
-            if (!isActive) {
-                ctx.fillStyle = '#f59e0b';
-                ctx.fillText('⚠️ Телефон не стабилен', 20, 60);
-            }
         }
     }
     
-    async function initCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-            });
-            video.srcObject = stream;
-            await video.play();
-            requestAnimationFrame(analyze);
-        } catch (err) {
-            rpmSpan.textContent = 'ОШИБКА';
-            showAlert('danger', '❌ Нет доступа к камере! Проверьте разрешения', 0);
-        }
-    }
+    // ========== ОСНОВНОЙ ЦИКЛ (ОПТИМИЗИРОВАННЫЙ) ==========
+    let frameSkip = 0;
     
-    function analyze() {
+    async function mainLoop() {
         if (!video.videoWidth) {
-            requestAnimationFrame(analyze);
+            animationId = requestAnimationFrame(mainLoop);
             return;
         }
         
-        const width = Math.min(200, video.videoWidth);
-        const height = Math.floor(width * video.videoHeight / video.videoWidth);
+        frameSkip++;
         
-        // Распознавание робота
-        if (Date.now() - lastDetectionTime > 200) {
-            const imgData = (() => {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, width, height);
-                return ctx.getImageData(0, 0, width, height);
-            })();
+        // Распознавание робота (каждые 15 кадров)
+        if (frameSkip % 8 === 0) {
+            const w = Math.min(160, video.videoWidth);
+            const h = Math.floor(w * video.videoHeight / video.videoWidth);
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, w, h);
+            const imgData = ctx.getImageData(0, 0, w, h);
             
-            const detection = detectRobot(imgData, width, height);
+            const detection = detectRobotFast(imgData, w, h);
             robotDetected = detection.detected;
             robotType = detection.type;
-            updateRobotUI();
-            lastDetectionTime = Date.now();
+            
+            if (robotDetected) {
+                robotStatusSpan.innerHTML = robotType === 'wheels' ? '⚙️ С КОЛЁСАМИ' : '🐛 НА ГУСЕНИЦАХ';
+                robotStatusSpan.className = 'status-value status-active';
+                robotIconSpan.innerHTML = robotType === 'wheels' ? '⚙️' : '🐛';
+            } else {
+                robotStatusSpan.innerHTML = '❌ НЕ НАЙДЕН';
+                robotStatusSpan.className = 'status-value status-inactive';
+                robotIconSpan.innerHTML = '🤖❌';
+            }
+            
             drawOverlay();
-            updateAlerts();
         }
         
-        // Измерение скорости (только если система активна)
+        // Измерение скорости (только если условия выполнены)
         const isActive = (!isPhoneMoving && robotDetected);
         
-        if (isActive) {
-            const imgData = (() => {
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, width, height);
-                return ctx.getImageData(0, 0, width, height);
-            })();
+        if (isActive && frameSkip % 2 === 0) {
+            const w = Math.min(120, video.videoWidth);
+            const h = Math.floor(w * video.videoHeight / video.videoWidth);
+            const gray = getGrayFrameFast(w, h);
             
-            const currentGray = getGrayFrame(null, width, height);
-            const data = imgData.data;
-            for (let i = 0; i < width * height; i++) {
-                currentGray[i] = (data[i*4] + data[i*4+1] + data[i*4+2]) / 3;
-            }
-            
-            const motion = computeMotion(previousGray, currentGray);
-            let rawRPM = motion * 7.5;
-            filteredRPM = filteredRPM * 0.65 + rawRPM * 0.35;
-            currentRPM = Math.min(150, Math.max(0, filteredRPM));
-            rpmSpan.textContent = currentRPM.toFixed(1);
+            const motion = analyzeMotionFast(gray, w, h);
+            let rawRPM = motion * 6;
+            rpmFiltered = rpmFiltered * 0.7 + rawRPM * 0.3;
+            currentRPM = Math.min(120, Math.max(0, rpmFiltered));
+            rpmSpan.textContent = Math.floor(currentRPM);
             
             // Проверка превышения
-            if (currentRPM > 50 && !violationCooldown && Date.now() - lastViolationTime > 2000) {
-                addFine(video, currentRPM, robotType);
-                lastViolationTime = Date.now();
-                violationCooldown = true;
-                showAlert('danger', `⚠️ ПРЕВЫШЕНИЕ! ${currentRPM.toFixed(1)} об/мин - Штраф зафиксирован`, 3000);
-                setTimeout(() => { violationCooldown = false; }, 2000);
+            const now = Date.now();
+            if (currentRPM > 50 && now - lastViolation > 2000) {
+                addFine(currentRPM, robotType);
+                lastViolation = now;
             }
             
-            previousGray = currentGray;
-        } else {
+            prevFrame = gray;
+        } else if (!isActive) {
             if (currentRPM !== 0) {
                 currentRPM = 0;
-                filteredRPM = 0;
-                rpmSpan.textContent = '0.0';
+                rpmFiltered = 0;
+                rpmSpan.textContent = '0';
             }
-            previousGray = null;
+            prevFrame = null;
         }
         
-        requestAnimationFrame(analyze);
+        // Показываем статус системы
+        if (isActive && frameSkip % 20 === 0) {
+            if (alertsDiv.innerHTML === '' || alertsDiv.innerHTML.includes('АКТИВНА')) {
+                // не спамим
+            } else if (!alertsDiv.innerHTML.includes('АКТИВНА')) {
+                showAlert('success', '✅ Система активна - измерение скорости', 1500);
+            }
+        } else if (isPhoneMoving && !robotDetected && frameSkip % 30 === 0) {
+            showAlert('warning', '📱 Поставьте телефон на стол и наведите на робота', 1500);
+        } else if (isPhoneMoving && frameSkip % 40 === 0) {
+            showAlert('warning', '📱 Телефон должен быть неподвижен', 1500);
+        } else if (!robotDetected && !isPhoneMoving && frameSkip % 40 === 0) {
+            showAlert('warning', '🤖 Наведите камеру на робота', 1500);
+        }
+        
+        animationId = requestAnimationFrame(mainLoop);
+    }
+    
+    // ========== КАМЕРА ==========
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 720 }, height: { ideal: 540 } }
+            });
+            video.srcObject = stream;
+            await video.play();
+            showAlert('success', '✅ Камера готова', 1500);
+        } catch (err) {
+            console.error(err);
+            showAlert('danger', '❌ Нет доступа к камере', 3000);
+        }
     }
     
     // ========== ЗАПУСК ==========
     document.getElementById('clearFinesBtn').addEventListener('click', clearFines);
     
-    loadFines();
-    initMotionDetection();
-    initCamera();
+    // Переключение вкладок
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
+            document.getElementById(`${tab}-pane`).classList.add('active-pane');
+        });
+    });
     
-    // Обновление UI каждые 100мс
-    setInterval(() => {
-        updatePhoneUI();
-        updateStabilityBar();
-        updateAlerts();
-        drawOverlay();
-    }, 100);
+    loadFines();
+    initMotion();
+    initCamera();
+    mainLoop();
+    
+    // Очистка при закрытии
+    window.addEventListener('beforeunload', () => {
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(t => t.stop());
+        }
+        if (animationId) cancelAnimationFrame(animationId);
+    });
 </script>
 </body>
 </html>
