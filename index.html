@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Робот-Радар | Работает всегда</title>
+    <title>Робот-Радар | Рабочая версия</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+            background: #0a0f1e;
             color: #eef2ff;
             height: 100vh;
             display: flex;
@@ -23,9 +22,8 @@
         }
 
         .tab-bar {
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(31, 42, 62, 0.5);
+            background: #111827;
+            border-bottom: 1px solid #1f2a3e;
             padding: 8px 16px 0;
             display: flex;
             gap: 24px;
@@ -42,7 +40,6 @@
             cursor: pointer;
             flex: 1;
             text-align: center;
-            transition: all 0.2s;
         }
 
         .tab-button.active {
@@ -66,18 +63,17 @@
 
         .camera-container {
             background: #000;
-            border-radius: 24px;
+            border-radius: 20px;
             overflow: hidden;
             position: relative;
             width: 100%;
             margin-bottom: 16px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.5);
         }
 
         video {
             width: 100%;
             height: auto;
-            min-height: 300px;
+            min-height: 280px;
             object-fit: cover;
             display: block;
         }
@@ -99,16 +95,14 @@
         }
 
         .status-card {
-            background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: #1e293b;
+            border-radius: 16px;
             padding: 12px;
             text-align: center;
-            border: 1px solid rgba(96, 165, 250, 0.2);
         }
 
         .status-icon {
-            font-size: 2rem;
+            font-size: 1.8rem;
             display: block;
             margin-bottom: 4px;
         }
@@ -116,74 +110,37 @@
         .status-label {
             font-size: 0.7rem;
             color: #94a3b8;
-            margin-bottom: 4px;
         }
 
         .status-value {
             font-weight: 700;
             font-size: 0.85rem;
+            margin-top: 4px;
         }
 
         .status-active { color: #10b981; }
         .status-inactive { color: #ef4444; }
-        .status-warning { color: #f59e0b; }
-        .status-measuring { color: #facc15; animation: pulseText 1s infinite; }
-
-        @keyframes pulseText {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
 
         .speed-section {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-            backdrop-filter: blur(10px);
+            background: #1e293b;
             border-radius: 24px;
             padding: 20px;
             text-align: center;
             margin-bottom: 16px;
-            border: 2px solid rgba(250, 204, 21, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .speed-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(250,204,21,0.1) 0%, transparent 70%);
-            animation: rotate 10s linear infinite;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            border: 2px solid #facc15;
         }
 
         .speed-title {
             font-size: 0.8rem;
             color: #94a3b8;
             margin-bottom: 12px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .speed-display {
-            position: relative;
-            z-index: 1;
         }
 
         .speed-value {
             font-size: 4rem;
             font-weight: 800;
-            font-family: 'Courier New', monospace;
-            background: linear-gradient(135deg, #facc15, #f59e0b);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 30px rgba(250, 204, 21, 0.3);
+            font-family: monospace;
+            color: #facc15;
         }
 
         .speed-unit {
@@ -191,160 +148,90 @@
             color: #94a3b8;
         }
 
-        .stability-bar {
-            margin-top: 16px;
-            height: 4px;
-            background: rgba(51, 65, 85, 0.5);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-            z-index: 1;
-        }
-
-        .stability-fill {
-            height: 100%;
-            width: 0%;
-            transition: width 0.05s linear;
-            border-radius: 2px;
+        .debug-panel {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            color: #60a5fa;
         }
 
         .alert {
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 0.85rem;
-            font-weight: 500;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
             text-align: center;
             margin-bottom: 8px;
-            animation: slideIn 0.3s ease;
-            backdrop-filter: blur(10px);
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .alert-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-        .alert-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); animation: blink 1s infinite; }
-        .alert-info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
+        .alert-success { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .alert-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .alert-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .alert-info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
         .fines-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .fine-card {
-            background: rgba(30, 41, 59, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: #1e293b;
+            border-radius: 16px;
             overflow: hidden;
-            border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
         .fine-photo {
             width: 100%;
-            max-height: 220px;
+            max-height: 180px;
             object-fit: cover;
         }
 
         .fine-info {
-            padding: 12px 16px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            border-top: 1px solid rgba(51, 65, 85, 0.5);
+            font-size: 0.8rem;
         }
 
         .fine-datetime {
             font-family: monospace;
-            font-size: 0.8rem;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 5px 12px;
+            background: #0f172a;
+            padding: 4px 10px;
             border-radius: 20px;
         }
 
         .fine-rpm {
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            padding: 5px 12px;
+            background: #dc2626;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-weight: bold;
         }
 
         .empty-fines {
             text-align: center;
-            padding: 48px 20px;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 24px;
+            padding: 40px;
+            background: #1e293b;
+            border-radius: 20px;
             color: #94a3b8;
         }
 
         .clear-btn {
-            background: linear-gradient(135deg, #334155, #1f2937);
+            background: #334155;
             border: none;
-            padding: 12px 20px;
+            padding: 12px;
             border-radius: 40px;
             color: white;
             font-weight: 600;
             margin-top: 16px;
             width: 100%;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .clear-btn:active {
-            transform: scale(0.97);
-        }
-
-        .info-note {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 16px;
-            padding: 12px;
-            font-size: 0.7rem;
-            text-align: center;
-            color: #94a3b8;
-            margin-top: 12px;
-        }
-
-        .speed-history {
-            font-size: 0.7rem;
-            color: #60a5fa;
-            margin-top: 8px;
-        }
-
-        .active-badge {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: blink 1s infinite;
-            margin-right: 6px;
-        }
-
-        .test-button {
-            background: #f59e0b;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            color: white;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
+        button:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
@@ -364,124 +251,105 @@
 
         <div class="status-grid">
             <div class="status-card">
-                <span class="status-icon" id="phoneIcon">📱</span>
+                <span class="status-icon">📱</span>
                 <div class="status-label">Стабильность</div>
-                <div class="status-value" id="phoneStatus">Анализ...</div>
+                <div class="status-value" id="phoneStatus">✅ СТАБИЛЕН</div>
             </div>
             <div class="status-card">
-                <span class="status-icon" id="robotIcon">🤖</span>
+                <span class="status-icon" id="robotIconDisplay">🤖</span>
                 <div class="status-label">Робот</div>
-                <div class="status-value" id="robotStatus">Поиск...</div>
+                <div class="status-value" id="robotStatusDisplay">🔍 ПОИСК...</div>
             </div>
         </div>
 
         <div class="speed-section">
-            <div class="speed-title">
-                <span id="measuringIndicator"><span class="active-badge"></span>СПИДОМЕТР АКТИВЕН</span>
-            </div>
-            <div class="speed-display">
+            <div class="speed-title">🌀 СКОРОСТЬ ВРАЩЕНИЯ</div>
+            <div>
                 <span class="speed-value" id="rpmValue">0</span>
                 <span class="speed-unit">об/мин</span>
             </div>
-            <div class="stability-bar">
-                <div class="stability-fill" id="stabilityFill"></div>
-            </div>
-            <div class="speed-history" id="speedHistory"></div>
-            <button class="test-button" id="testSpeedBtn">🔧 Тест: +10 об/мин</button>
+            <div id="speedInfo" style="font-size: 0.7rem; color: #60a5fa; margin-top: 8px;">Двигайте объект перед камерой</div>
         </div>
 
         <div id="alerts"></div>
 
-        <div class="info-note">
-            🎯 <strong>СПИДОМЕТР РАБОТАЕТ ВСЕГДА!</strong><br>
-            ✅ Скорость измеряется постоянно, независимо от обнаружения робота<br>
-            ✅ При обнаружении робота включается автоматическая фиксация нарушений<br>
-            ✅ Двигайте объект перед камерой - спидометр сразу покажет скорость<br>
-            ⚡ Превышение 50 об/мин → автоматический штраф с фото
+        <div class="debug-panel" id="debugPanel">
+            🟢 Система активна | Движение: 0.00
         </div>
     </div>
 
     <div id="fines-pane" class="tab-pane">
         <div id="finesList"></div>
-        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю штрафов</button>
+        <button id="clearFinesBtn" class="clear-btn">🗑 Очистить историю</button>
     </div>
 </div>
 
 <script>
-    // ========== ФИНАЛЬНАЯ ВЕРСИЯ - СПИДОМЕТР РАБОТАЕТ ВСЕГДА ==========
+    // ========== ПРОСТАЯ РАБОЧАЯ ВЕРСИЯ ==========
     
-    // DOM элементы
+    // Получаем элементы
     const video = document.getElementById('video');
     const overlayCanvas = document.getElementById('overlayCanvas');
     const rpmSpan = document.getElementById('rpmValue');
+    const robotStatusDisplay = document.getElementById('robotStatusDisplay');
+    const robotIconDisplay = document.getElementById('robotIconDisplay');
     const phoneStatusSpan = document.getElementById('phoneStatus');
-    const robotStatusSpan = document.getElementById('robotStatus');
-    const phoneIconSpan = document.getElementById('phoneIcon');
-    const robotIconSpan = document.getElementById('robotIcon');
-    const stabilityFill = document.getElementById('stabilityFill');
     const alertsDiv = document.getElementById('alerts');
-    const speedHistoryDiv = document.getElementById('speedHistory');
+    const debugPanel = document.getElementById('debugPanel');
+    const speedInfo = document.getElementById('speedInfo');
     
-    // Состояние
-    let isPhoneMoving = false;
-    let stability = 100;
-    let robotDetected = false;
-    let robotType = null;
+    // Переменные состояния
+    let previousFrame = null;
     let currentRPM = 0;
-    let maxRPM = 0;
+    let filteredRPM = 0;
+    let robotDetected = false;
     let fines = [];
-    let animationId = null;
-    let lastViolation = 0;
-    let prevFrame = null;
-    let rpmFiltered = 0;
-    let speedHistory = [];
-    let frameCounter = 0;
-    let lastMotionValue = 0;
+    let lastViolationTime = 0;
+    let animationRunning = true;
+    let frameCount = 0;
+    let motionValue = 0;
     
-    // ========== ШТРАФЫ С ФОТО ==========
+    // Загрузка штрафов
     function loadFines() {
         try {
-            const saved = localStorage.getItem('robot_fines_final');
+            const saved = localStorage.getItem('robot_radar_fines');
             if (saved) fines = JSON.parse(saved);
         } catch(e) { fines = []; }
         renderFines();
     }
     
     function saveFines() {
-        localStorage.setItem('robot_fines_final', JSON.stringify(fines.slice(0, 30)));
+        localStorage.setItem('robot_radar_fines', JSON.stringify(fines.slice(0, 30)));
     }
     
-    function capturePhoto() {
-        return new Promise((resolve) => {
-            if (!video.videoWidth) {
-                resolve(null);
-                return;
-            }
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            // Добавляем водяной знак
-            ctx.font = 'bold 14px monospace';
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-            ctx.fillStyle = '#facc15';
-            ctx.font = 'bold 13px monospace';
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
-            const dateStr = now.toLocaleDateString('ru-RU');
-            ctx.fillText(`🚨 ПРЕВЫШЕНИЕ | ${dateStr} ${timeStr} | ${currentRPM.toFixed(1)} об/мин`, 10, canvas.height - 12);
-            
-            resolve(canvas.toDataURL('image/jpeg', 0.85));
-        });
+    // Сделать фото
+    function takePhoto() {
+        if (!video.videoWidth) return null;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        
+        // Добавляем данные
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
+        const dateStr = now.toLocaleDateString('ru-RU');
+        
+        ctx.font = 'bold 12px monospace';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+        ctx.fillStyle = '#facc15';
+        ctx.fillText(`🚨 ${dateStr} ${timeStr} | ${currentRPM.toFixed(0)} об/мин`, 10, canvas.height - 8);
+        
+        return canvas.toDataURL('image/jpeg', 0.8);
     }
     
-    async function addFine(rpm, type) {
-        const photo = await capturePhoto();
-        if (!photo) return false;
+    // Добавить штраф
+    function addFine() {
+        const photo = takePhoto();
+        if (!photo) return;
         
         const now = new Date();
         const timeStr = now.toLocaleTimeString('ru-RU', { hour12: false });
@@ -490,20 +358,15 @@
         fines.unshift({
             photo: photo,
             time: `${dateStr} ${timeStr}`,
-            rpm: rpm.toFixed(1),
-            type: type || 'wheels',
-            timestamp: now.getTime()
+            rpm: currentRPM.toFixed(0)
         });
         
-        if (fines.length > 30) fines.pop();
         saveFines();
         renderFines();
         
-        showAlert('danger', `⚠️ ШТРАФ! ${rpm.toFixed(1)} об/мин - превышение зафиксировано с фото`, 3000);
+        showAlert('danger', `⚠️ ШТРАФ! ${currentRPM.toFixed(0)} об/мин - превышение скорости`, 3000);
         
         if (navigator.vibrate) navigator.vibrate(200);
-        
-        return true;
     }
     
     function renderFines() {
@@ -511,7 +374,7 @@
         if (!container) return;
         
         if (fines.length === 0) {
-            container.innerHTML = '<div class="empty-fines">📭 Нет зафиксированных нарушений</div>';
+            container.innerHTML = '<div class="empty-fines">📭 Нет нарушений</div>';
             return;
         }
         
@@ -520,166 +383,85 @@
                 <img class="fine-photo" src="${f.photo}" alt="Нарушение">
                 <div class="fine-info">
                     <span class="fine-datetime">🕒 ${f.time}</span>
-                    <span class="fine-rpm">${f.type === 'wheels' ? '⚙️' : '🐛'} ${f.rpm} об/мин</span>
+                    <span class="fine-rpm">⚡ ${f.rpm} об/мин</span>
                 </div>
             </div>
         `).join('');
     }
     
     function clearFines() {
-        if (confirm('🗑 Удалить все штрафы?')) {
+        if (confirm('Удалить все штрафы?')) {
             fines = [];
             saveFines();
             renderFines();
-            showAlert('info', '✅ История штрафов очищена', 2000);
+            showAlert('info', 'История очищена', 1500);
         }
     }
     
-    // ========== УВЕДОМЛЕНИЯ ==========
-    let alertTimeout = null;
     function showAlert(type, message, duration = 2500) {
         alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-        if (alertTimeout) clearTimeout(alertTimeout);
-        if (duration > 0) {
-            alertTimeout = setTimeout(() => {
-                if (alertsDiv.innerHTML.includes(message)) {
-                    alertsDiv.innerHTML = '';
-                }
-            }, duration);
-        }
-    }
-    
-    // ========== ДЕТЕКЦИЯ ДВИЖЕНИЯ ТЕЛЕФОНА ==========
-    let motionBuffer = [];
-    
-    function handleMotion(event) {
-        const acc = event.accelerationIncludingGravity;
-        if (!acc) return;
-        
-        const mag = Math.abs((acc.x || 0)) + Math.abs((acc.y || 0)) + Math.abs((acc.z || 0));
-        const deviation = Math.abs(mag - 9.8);
-        
-        motionBuffer.push(deviation);
-        if (motionBuffer.length > 8) motionBuffer.shift();
-        
-        const avgDev = motionBuffer.reduce((a,b) => a+b, 0) / motionBuffer.length;
-        stability = Math.max(0, Math.min(100, 100 - avgDev * 8));
-        
-        isPhoneMoving = stability < 50;
-        
-        if (isPhoneMoving) {
-            phoneStatusSpan.innerHTML = '⚠️ ДВИЖЕТСЯ';
-            phoneStatusSpan.className = 'status-value status-inactive';
-            phoneIconSpan.innerHTML = '📱⚠️';
-        } else {
-            phoneStatusSpan.innerHTML = '✅ СТАБИЛЕН';
-            phoneStatusSpan.className = 'status-value status-active';
-            phoneIconSpan.innerHTML = '📱✅';
-        }
-        
-        stabilityFill.style.width = stability + '%';
-        if (stability > 70) stabilityFill.style.background = '#10b981';
-        else if (stability > 40) stabilityFill.style.background = '#f59e0b';
-        else stabilityFill.style.background = '#ef4444';
-    }
-    
-    function initMotion() {
-        if (!window.DeviceMotionEvent) {
-            isPhoneMoving = false;
-            stability = 100;
-            phoneStatusSpan.innerHTML = '✅ СТАБИЛЕН';
-            return;
-        }
-        
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-            document.body.addEventListener('click', () => {
-                DeviceMotionEvent.requestPermission().then(p => {
-                    if (p === 'granted') window.addEventListener('devicemotion', handleMotion);
-                }).catch(console.log);
-            }, { once: true });
-        } else {
-            window.addEventListener('devicemotion', handleMotion);
-        }
-    }
-    
-    // ========== РАСПОЗНАВАНИЕ РОБОТА ==========
-    function detectRobot(imageData, w, h) {
-        const data = imageData.data;
-        let edges = 0;
-        let darkSpots = 0;
-        
-        for (let y = 5; y < h - 5; y += 6) {
-            for (let x = 5; x < w - 5; x += 6) {
-                const idx = (y * w + x) * 4;
-                const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-                const idxR = (y * w + x + 4) * 4;
-                const brightR = (data[idxR] + data[idxR+1] + data[idxR+2]) / 3;
-                const idxD = ((y + 4) * w + x) * 4;
-                const brightD = (data[idxD] + data[idxD+1] + data[idxD+2]) / 3;
-                
-                if (Math.abs(bright - brightR) > 40) edges++;
-                if (Math.abs(bright - brightD) > 40) edges++;
-                if (bright < 80) darkSpots++;
+        setTimeout(() => {
+            if (alertsDiv.innerHTML.includes(message)) {
+                alertsDiv.innerHTML = '';
             }
-        }
-        
-        if (edges < 25) return { detected: false, type: null };
-        
-        let circleScore = 0;
-        for (let y = 15; y < h - 15; y += 12) {
-            for (let x = 15; x < w - 15; x += 12) {
-                let circle = 0;
-                for (let r = 8; r <= 20; r += 6) {
-                    for (let a = 0; a < 360; a += 45) {
-                        const rad = a * Math.PI / 180;
-                        const px = x + r * Math.cos(rad);
-                        const py = y + r * Math.sin(rad);
-                        if (px >= 0 && px < w && py >= 0 && py < h) {
-                            const idx = (Math.floor(py) * w + Math.floor(px)) * 4;
-                            const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
-                            if (bright < 100) circle++;
-                        }
-                    }
-                }
-                if (circle > 22) circleScore++;
-            }
-        }
-        
-        if (circleScore > 2) return { detected: true, type: 'wheels' };
-        if (edges > 60) return { detected: true, type: 'tracks' };
-        if (edges > 45) return { detected: true, type: 'wheels' };
-        
-        return { detected: false, type: null };
+        }, duration);
     }
     
-    // ========== АНАЛИЗ ДВИЖЕНИЯ ДЛЯ СПИДОМЕТРА (РАБОТАЕТ ВСЕГДА) ==========
-    function getGrayFrame(w, h) {
+    // ========== ГЛАВНАЯ ФУНКЦИЯ - АНАЛИЗ ДВИЖЕНИЯ ==========
+    function getGrayFrame(width, height) {
         const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, w, h);
-        const imgData = ctx.getImageData(0, 0, w, h);
+        ctx.drawImage(video, 0, 0, width, height);
+        const imgData = ctx.getImageData(0, 0, width, height);
         const data = imgData.data;
-        const gray = new Uint8ClampedArray(w * h);
-        for (let i = 0; i < w * h; i++) {
+        const gray = new Uint8ClampedArray(width * height);
+        for (let i = 0; i < width * height; i++) {
             gray[i] = (data[i*4] + data[i*4+1] + data[i*4+2]) / 3;
         }
         return gray;
     }
     
-    function computeMotion(prev, curr) {
+    function calculateMotion(prev, curr) {
         if (!prev || !curr) return 0;
         let diff = 0;
         let count = 0;
-        for (let i = 0; i < prev.length; i += 4) {
+        // Берем каждый 5-й пиксель для скорости
+        for (let i = 0; i < prev.length; i += 5) {
             diff += Math.abs(prev[i] - curr[i]);
             count++;
         }
         return diff / count;
     }
     
-    function drawOverlay() {
+    // Простое распознавание робота (ищет контрастные области)
+    function detectRobotSimple(width, height) {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, width, height);
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        
+        let edges = 0;
+        
+        for (let y = 8; y < height - 8; y += 8) {
+            for (let x = 8; x < width - 8; x += 8) {
+                const idx = (y * width + x) * 4;
+                const bright = (data[idx] + data[idx+1] + data[idx+2]) / 3;
+                const idxR = (y * width + x + 5) * 4;
+                const brightR = (data[idxR] + data[idxR+1] + data[idxR+2]) / 3;
+                if (Math.abs(bright - brightR) > 45) edges++;
+            }
+        }
+        
+        return edges > 35;
+    }
+    
+    // Рисуем рамку
+    function drawOverlay(detected) {
         const ctx = overlayCanvas.getContext('2d');
         if (!video.videoWidth) return;
         
@@ -687,181 +469,164 @@
         overlayCanvas.height = video.videoHeight;
         ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         
-        if (robotDetected) {
+        if (detected) {
             ctx.strokeStyle = '#10b981';
             ctx.lineWidth = 4;
-            ctx.strokeRect(8, 8, overlayCanvas.width - 16, overlayCanvas.height - 16);
-            
+            ctx.strokeRect(10, 10, overlayCanvas.width - 20, overlayCanvas.height - 20);
             ctx.font = 'bold 14px system-ui';
             ctx.fillStyle = '#10b981';
-            const label = robotType === 'wheels' ? '⚙️ РОБОТ С КОЛЁСАМИ' : '🐛 РОБОТ НА ГУСЕНИЦАХ';
-            ctx.fillText(label, 20, 40);
-            
-            ctx.font = 'bold 12px monospace';
-            ctx.fillStyle = '#facc15';
-            ctx.fillText(`Скорость: ${currentRPM.toFixed(0)} об/мин`, 20, 70);
+            ctx.fillText('🤖 РОБОТ ОБНАРУЖЕН', 20, 40);
         }
     }
     
-    // ========== ОСНОВНОЙ ЦИКЛ - СПИДОМЕТР РАБОТАЕТ ВСЕГДА ==========
+    // ========== ОСНОВНОЙ ЦИКЛ ==========
     let lastRobotCheck = 0;
     
-    async function mainLoop() {
+    async function analyzeFrame() {
         if (!video.videoWidth || video.videoWidth === 0) {
-            animationId = requestAnimationFrame(mainLoop);
+            requestAnimationFrame(analyzeFrame);
             return;
         }
         
-        frameCounter++;
+        frameCount++;
         
-        // ========== СПИДОМЕТР - РАБОТАЕТ ВСЕГДА, КАЖДЫЙ КАДР ==========
-        const w = Math.min(100, video.videoWidth);
-        const h = Math.floor(w * video.videoHeight / video.videoWidth);
-        const gray = getGrayFrame(w, h);
+        // Получаем маленькое изображение для анализа движения
+        const smallW = 80;
+        const smallH = Math.floor(smallW * video.videoHeight / video.videoWidth);
+        const gray = getGrayFrame(smallW, smallH);
         
-        const motion = computeMotion(prevFrame, gray);
+        // Вычисляем движение
+        motionValue = calculateMotion(previousFrame, gray);
         
-        // Преобразуем движение в RPM (обороты в минуту)
-        // Чем больше движение, тем выше RPM
-        let rawRPM = motion * 9.5;
-        if (rawRPM < 0) rawRPM = 0;
+        // Преобразуем движение в RPM
+        let rawRPM = motionValue * 12;
+        if (rawRPM > 150) rawRPM = 150;
+        filteredRPM = filteredRPM * 0.7 + rawRPM * 0.3;
+        currentRPM = Math.floor(filteredRPM);
         
-        // Фильтрация для плавности
-        rpmFiltered = rpmFiltered * 0.65 + rawRPM * 0.35;
-        currentRPM = Math.min(150, Math.max(0, rpmFiltered));
+        // Обновляем дисплей
+        rpmSpan.textContent = currentRPM;
         
-        // Обновляем отображение
-        rpmSpan.textContent = Math.floor(currentRPM);
+        // Обновляем отладочную панель
+        debugPanel.innerHTML = `🟢 Система активна | Движение: ${motionValue.toFixed(2)} | RPM: ${currentRPM}`;
         
-        // Обновляем историю
-        speedHistory.push(currentRPM);
-        if (speedHistory.length > 10) speedHistory.shift();
-        
-        if (currentRPM > maxRPM) maxRPM = currentRPM;
-        
-        // Показываем статус
-        if (robotDetected) {
-            speedHistoryDiv.innerHTML = `🤖 Робот обнаружен | 📊 ${currentRPM.toFixed(0)} об/мин | 🏆 Пик: ${maxRPM.toFixed(0)} об/мин`;
+        // Информация о скорости
+        if (currentRPM > 0) {
+            speedInfo.innerHTML = `📊 Текущая скорость: ${currentRPM} об/мин`;
+            if (currentRPM > 30) {
+                speedInfo.style.color = '#f59e0b';
+            } else {
+                speedInfo.style.color = '#60a5fa';
+            }
         } else {
-            speedHistoryDiv.innerHTML = `📊 Текущая скорость: ${currentRPM.toFixed(0)} об/мин | Пик: ${maxRPM.toFixed(0)} об/мин`;
+            speedInfo.innerHTML = `🔄 Двигайте объект перед камерой чтобы увидеть скорость`;
+            speedInfo.style.color = '#60a5fa';
         }
         
-        // Проверка превышения (только если робот обнаружен)
-        const now = Date.now();
-        if (robotDetected && currentRPM > 50 && now - lastViolation > 2500) {
-            await addFine(currentRPM, robotType);
-            lastViolation = now;
-            showAlert('danger', `⚠️ ПРЕВЫШЕНИЕ! ${currentRPM.toFixed(0)} об/мин - штраф оформлен`, 3000);
-        }
-        
-        prevFrame = gray;
-        
-        // ========== РАСПОЗНАВАНИЕ РОБОТА (каждые 10 кадров) ==========
-        if (frameCounter % 10 === 0) {
-            const detectW = Math.min(120, video.videoWidth);
+        // Распознавание робота (раз в секунду)
+        if (frameCount % 15 === 0) {
+            const detectW = 100;
             const detectH = Math.floor(detectW * video.videoHeight / video.videoWidth);
-            const canvas = document.createElement('canvas');
-            canvas.width = detectW;
-            canvas.height = detectH;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, detectW, detectH);
-            const imgData = ctx.getImageData(0, 0, detectW, detectH);
-            
-            const detection = detectRobot(imgData, detectW, detectH);
-            const wasDetected = robotDetected;
-            robotDetected = detection.detected;
-            robotType = detection.type;
+            const detected = detectRobotSimple(detectW, detectH);
+            robotDetected = detected;
             
             if (robotDetected) {
-                robotStatusSpan.innerHTML = robotType === 'wheels' ? '⚙️ С КОЛЁСАМИ' : '🐛 НА ГУСЕНИЦАХ';
-                robotStatusSpan.className = 'status-value status-active';
-                robotIconSpan.innerHTML = robotType === 'wheels' ? '⚙️' : '🐛';
-                
-                if (!wasDetected) {
-                    showAlert('success', '🤖 Робот обнаружен! Включена автофиксация нарушений', 2000);
-                }
+                robotStatusDisplay.innerHTML = '✅ ОБНАРУЖЕН';
+                robotStatusDisplay.className = 'status-value status-active';
+                robotIconDisplay.innerHTML = '🤖✅';
+                drawOverlay(true);
             } else {
-                robotStatusSpan.innerHTML = '❌ НЕ НАЙДЕН';
-                robotStatusSpan.className = 'status-value status-inactive';
-                robotIconSpan.innerHTML = '🤖❌';
+                robotStatusDisplay.innerHTML = '❌ НЕ НАЙДЕН';
+                robotStatusDisplay.className = 'status-value status-inactive';
+                robotIconDisplay.innerHTML = '🤖❌';
+                drawOverlay(false);
             }
-            
-            drawOverlay();
         }
         
-        // Показываем подсказку если скорость высокая но робот не обнаружен
-        if (frameCounter % 60 === 0 && currentRPM > 30 && !robotDetected) {
-            showAlert('info', '💡 Движение обнаружено! Наведите камеру на робота для фиксации нарушений', 2000);
+        // Проверка превышения скорости (если робот обнаружен)
+        const now = Date.now();
+        if (robotDetected && currentRPM > 50 && now - lastViolationTime > 2500) {
+            addFine();
+            lastViolationTime = now;
+            showAlert('danger', `⚠️ ПРЕВЫШЕНИЕ! ${currentRPM} об/мин - штраф оформлен`, 3000);
         }
         
-        animationId = requestAnimationFrame(mainLoop);
+        // Сохраняем кадр для следующего сравнения
+        previousFrame = gray;
+        
+        requestAnimationFrame(analyzeFrame);
     }
     
-    // ========== КАМЕРА ==========
-    async function initCamera() {
+    // ========== ЗАПУСК КАМЕРЫ ==========
+    async function startCamera() {
         try {
-            const constraints = {
+            const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: { exact: "environment" },
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
                 }
-            };
-            
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            });
             video.srcObject = stream;
             await video.play();
-            showAlert('success', '✅ Камера готова! Спидометр активен', 2000);
+            showAlert('success', '✅ Камера работает! Двигайте объект перед камерой', 2000);
+            
+            // Ждем немного и запускаем анализ
+            setTimeout(() => {
+                analyzeFrame();
+            }, 500);
         } catch (err) {
+            console.error('Camera error:', err);
+            // Пробуем без точного режима
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
                 await video.play();
-                showAlert('success', '✅ Камера готова! Спидометр активен', 2000);
+                showAlert('success', '✅ Камера работает!', 2000);
+                setTimeout(() => {
+                    analyzeFrame();
+                }, 500);
             } catch(e) {
                 showAlert('danger', '❌ Нет доступа к камере', 3000);
+                debugPanel.innerHTML = '🔴 Ошибка: нет доступа к камере';
             }
         }
     }
     
-    // ========== ТЕСТОВАЯ КНОПКА ==========
-    document.getElementById('testSpeedBtn').addEventListener('click', () => {
-        // Имитация движения для теста
-        let testRPM = currentRPM + 10;
-        if (testRPM > 80) testRPM = 20;
-        rpmFiltered = testRPM;
-        currentRPM = testRPM;
-        rpmSpan.textContent = Math.floor(currentRPM);
-        showAlert('info', `🔧 Тест: скорость установлена на ${Math.floor(currentRPM)} об/мин`, 1500);
+    // ========== ИНИЦИАЛИЗАЦИЯ ==========
+    function init() {
+        loadFines();
+        startCamera();
         
-        if (currentRPM > 50 && robotDetected) {
-            addFine(currentRPM, robotType || 'wheels');
-        }
-    });
-    
-    // ========== ЗАПУСК ==========
-    document.getElementById('clearFinesBtn').addEventListener('click', clearFines);
-    
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tab = btn.dataset.tab;
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
-            document.getElementById(`${tab}-pane`).classList.add('active-pane');
+        // Кнопка очистки
+        document.getElementById('clearFinsBtn').addEventListener('click', clearFines);
+        
+        // Переключение вкладок
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active-pane'));
+                document.getElementById(`${tab}-pane`).classList.add('active-pane');
+            });
         });
-    });
+        
+        // Имитация стабильности телефона (всегда стабилен для простоты)
+        phoneStatusSpan.innerHTML = '✅ СТАБИЛЕН';
+        phoneStatusSpan.className = 'status-value status-active';
+        
+        showAlert('info', '💡 Совет: двигайте объект перед камерой - спидометр покажет скорость!', 4000);
+    }
     
-    loadFines();
-    initMotion();
-    initCamera();
-    mainLoop();
+    // Запуск
+    init();
     
+    // Очистка при закрытии
     window.addEventListener('beforeunload', () => {
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(t => t.stop());
         }
-        if (animationId) cancelAnimationFrame(animationId);
     });
 </script>
 </body>
